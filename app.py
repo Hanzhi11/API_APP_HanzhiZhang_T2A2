@@ -2,6 +2,7 @@ from flask import Flask
 import os
 from init import db, ma, bcrypt, jwt
 from controllers.cli_controller import db_commands
+from controllers.customers_controller import customers_bp
 
 
 def create_app():
@@ -15,5 +16,6 @@ def create_app():
     jwt.init_app(app)
 
     app.register_blueprint(db_commands)
+    app.register_blueprint(customers_bp)    
 
     return app
