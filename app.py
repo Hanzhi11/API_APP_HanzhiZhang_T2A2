@@ -12,6 +12,14 @@ def create_app():
     def not_found(err):
         return {'error': str(err)}, 404
 
+    @app.errorhandler(400)
+    def bad_request(err):
+        return {'error': str(err)}, 400
+
+    @app.errorhandler(ValueError)
+    def value_error(err):
+        return {'error': str(err)}, 403
+
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 
     db.init_app(app)

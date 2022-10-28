@@ -22,14 +22,14 @@ def seed_db():
             last_name = 'Porter',
             email = 'harryporter@test.com',
             password = bcrypt.generate_password_hash('HarryPorter1!').decode('utf-8'),
-            contact_number = 412341234
+            contact_number = '0412341234'
         ),
         Customer(
             first_name = 'Rod',
             last_name = 'Stone',
             email = 'rodstone@test.com',
             password = bcrypt.generate_password_hash('Rodstone2$').decode('utf-8'),
-            contact_number = 733441234
+            contact_number = '0733441234'
         )
     ]
 
