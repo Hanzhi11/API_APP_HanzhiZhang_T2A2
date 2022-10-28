@@ -3,6 +3,7 @@ from init import db, bcrypt
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.customer import CustomerSchema, Customer
 import re
+from sqlalchemy.exc import IntegrityError
 
 customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
 
@@ -21,7 +22,7 @@ def get_one_customer(customer_id):
     else:
         return {'error': f'Customer with id {customer_id} not found'}, 404
 
-@customers_bp.route('/<int:customer_id>', methods=['DELETE'])
+@customers_bp.route('/<int:customer_id>/', methods=['DELETE'])
 def delete_customer(customer_id):
     stmt = db.select(Customer).filter_by(id=customer_id)
     customer = db.session.scalar(stmt)
@@ -33,7 +34,7 @@ def delete_customer(customer_id):
     else:
         return {'error': f'Customer with id {customer_id} not found'}, 404
 
-@customers_bp.route('/<int:customer_id>', methods=['PUT', 'PTACH'])
+@customers_bp.route('/<int:customer_id>/', methods=['PUT', 'PATCH'])
 def update_customer(customer_id):
     stmt = db.select(Customer).filter_by(id=customer_id)
     customer = db.session.scalar(stmt)
@@ -53,3 +54,22 @@ def update_customer(customer_id):
         return CustomerSchema(exclude=['password']).dump(customer)
     else:
         return {'error': f'Customer with id {customer_id} not found'}, 404
+
+@customers_bp.route('/register/', methods=['POST'])
+def customer_register():
+    password_input = request.json.get('password')
+    if not re.match('^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', password_input):
+        raise ValueError('Password must contain minimum 8 characters, at lease one letter, one number and one special characters')
+    try:
+        customer = Customer(
+            first_name = request.json['first_name'],
+            last_name = request.json['last_name'],
+            contact_number = request.json['contact_number'],
+            email = request.json['email'],
+            password = bcrypt.generate_password_hash(password_input).decode('utf-8')
+        )
+        db.session.add(customer)
+        db.session.commit()
+        return CustomerSchema(exclude=['password']).dump(customer), 201
+    except IntegrityError:
+        return {'error': 'Email address exists already'}, 409
