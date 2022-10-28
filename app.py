@@ -8,6 +8,10 @@ from controllers.customers_controller import customers_bp
 def create_app():
     app = Flask(__name__)
 
+    @app.errorhandler(404)
+    def not_found(err):
+        return {'error': str(err)}, 404
+
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 
     db.init_app(app)
