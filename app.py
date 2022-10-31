@@ -4,14 +4,19 @@ from init import db, ma, bcrypt, jwt
 from controllers.cli_controller import db_commands
 from controllers.customers_controller import customers_bp
 from controllers.veterinarians_controller import veterinarians_bp
+from sqlalchemy.exc import NoResultFound
 
 
 def create_app():
     app = Flask(__name__)
 
-    @app.errorhandler(404)
-    def not_found(err):
-        return {'error': str(err)}, 404
+    # @app.errorhandler(404)
+    # def not_found(err):
+    #     return {'error': str(err)}, 404
+
+    @app.errorhandler(405)
+    def method_error(err):
+        return {'error': str(err)}, 405
 
     @app.errorhandler(400)
     def bad_request(err):
@@ -20,6 +25,10 @@ def create_app():
     @app.errorhandler(ValueError)
     def value_error(err):
         return {'error': str(err)}, 403
+
+    @app.errorhandler(NoResultFound)
+    def no_result_found(err):
+        return {'error': str(err)}, 404
 
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
 
