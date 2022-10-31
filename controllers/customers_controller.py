@@ -26,7 +26,6 @@ def get_one_customer(customer_id):
 def delete_customer(customer_id):
     stmt = db.select(Customer).filter_by(id=customer_id)
     customer = db.session.scalar(stmt)
-    print(customer)
     if customer:
         db.session.delete(customer)
         db.session.commit()
@@ -47,7 +46,7 @@ def update_customer(customer_id):
         if new_password:
             if not re.match('^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', new_password):
                 raise ValueError('Password must contain minimum 8 characters, at lease one letter, one number and one special characters')
-            customer.password = bcrypt.generate_password_hash(new_password).decode('utf-8'),
+            customer.password = bcrypt.generate_password_hash(new_password).decode('utf-8')
         else:
             customer.password = customer.password
         db.session.commit()

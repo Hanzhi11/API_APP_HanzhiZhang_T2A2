@@ -45,7 +45,7 @@ def seed_db():
             password = bcrypt.generate_password_hash('Samsky1?').decode('utf-8'),
             description = 'Lorem ipsum dolor sit amet.',
             sex = 'Male',
-            languages = ['Korean'],
+            languages = 'Korean',
             is_admin = True
         ),
         Veterinarian(

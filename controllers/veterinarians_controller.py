@@ -1,3 +1,4 @@
+from types import NoneType
 from flask import Blueprint, request
 from init import db, bcrypt
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -5,71 +6,93 @@ from models.veterinarian import VeterinarianSchema, Veterinarian
 import re
 from sqlalchemy.exc import IntegrityError
 
-customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
+veterinarians_bp = Blueprint('veterinarians', __name__, url_prefix='/veterinarians')
 
-@customers_bp.route('/')
-def get_all_customers():
-    stmt = db.select(Customer)
-    customers = db.session.scalars(stmt)
-    return CustomerSchema(many=True, exclude=['password']).dump(customers)
+@veterinarians_bp.route('/')
+def get_all_veterinarians():
+    stmt = db.select(Veterinarian)
+    veterinarians = db.session.scalars(stmt)
+    return VeterinarianSchema(many=True, exclude=['password']).dump(veterinarians)
 
-@customers_bp.route('/<int:customer_id>/')
-def get_one_customer(customer_id):
-    stmt = db.select(Customer).filter_by(id=customer_id)
-    customer = db.session.scalar(stmt)
-    if customer:
-        return CustomerSchema(exclude=['password']).dump(customer)
+@veterinarians_bp.route('/<int:veterinarian_id>/')
+def get_one_veterinarian(veterinarian_id):
+    stmt = db.select(Veterinarian).filter_by(id=veterinarian_id)
+    veterinarian = db.session.scalar(stmt)
+    if veterinarian:
+        return VeterinarianSchema(exclude=['password']).dump(veterinarian)
     else:
-        return {'error': f'Customer with id {customer_id} not found'}, 404
+        return {'error': f'Veterinarian with id {veterinarian_id} not found'}, 404
 
-@customers_bp.route('/<int:customer_id>/', methods=['DELETE'])
-def delete_customer(customer_id):
-    stmt = db.select(Customer).filter_by(id=customer_id)
-    customer = db.session.scalar(stmt)
-    print(customer)
-    if customer:
-        db.session.delete(customer)
+@veterinarians_bp.route('/<int:veterinarian_id>/', methods=['DELETE'])
+def delete_veterinarian(veterinarian_id):
+    stmt = db.select(Veterinarian).filter_by(id=veterinarian_id)
+    veterinarian = db.session.scalar(stmt)
+    if veterinarian:
+        db.session.delete(veterinarian)
         db.session.commit()
-        return {'msg': f'Customer {customer.first_name} {customer.last_name} deleted successfully'}
+        return {'msg': f'Veterinarian {veterinarian.first_name} {veterinarian.last_name} deleted successfully'}
     else:
-        return {'error': f'Customer with id {customer_id} not found'}, 404
+        return {'error': f'Veterinarian with id {veterinarian_id} not found'}, 404
 
-@customers_bp.route('/<int:customer_id>/', methods=['PUT', 'PATCH'])
-def update_customer(customer_id):
-    stmt = db.select(Customer).filter_by(id=customer_id)
-    customer = db.session.scalar(stmt)
-    if customer:
-        customer.first_name = request.json.get('first_name') or customer.first_name
-        customer.last_name = request.json.get('last_name') or customer.last_name
-        customer.contact_number = request.json.get('contact_number') or customer.contact_number
-        customer.email = request.json.get('email') or customer.email
+@veterinarians_bp.route('/<int:veterinarian_id>/', methods=['PUT', 'PATCH'])
+def update_veterinarian(veterinarian_id):
+    stmt = db.select(Veterinarian).filter_by(id=veterinarian_id)
+    veterinarian = db.session.scalar(stmt)
+    if veterinarian:
+        veterinarian.first_name = request.json.get('first_name') or veterinarian.first_name
+        veterinarian.last_name = request.json.get('last_name') or veterinarian.last_name
+        veterinarian.email = request.json.get('email') or veterinarian.email
+        veterinarian.sex = request.json.get('sex') or veterinarian.sex
+        veterinarian.is_admin = request.json.get('is_admin') or veterinarian.is_admin
+
+        new_description = request.json.get('description')
+        if isinstance(new_description, NoneType):
+            veterinarian.description = veterinarian.description
+        else:
+            if len(new_description) == 0:
+                veterinarian.description = None
+            else:
+                veterinarian.description = request.json.get('description')
+        
+        new_languages = request.json.get('languages')
+        if isinstance(new_languages, NoneType):
+            veterinarian.languages = veterinarian.languages
+        else:
+            if len(new_languages) == 0:
+                veterinarian.languages = None
+            else:
+                veterinarian.languages = request.json.get('languages')
+
         new_password = request.json.get('password')
         if new_password:
             if not re.match('^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', new_password):
                 raise ValueError('Password must contain minimum 8 characters, at lease one letter, one number and one special characters')
-            customer.password = bcrypt.generate_password_hash(new_password).decode('utf-8'),
+            veterinarian.password = bcrypt.generate_password_hash(new_password).decode('utf-8')
         else:
-            customer.password = customer.password
+            veterinarian.password = veterinarian.password
         db.session.commit()
-        return CustomerSchema(exclude=['password']).dump(customer)
+        return VeterinarianSchema(exclude=['password']).dump(veterinarian)
     else:
-        return {'error': f'Customer with id {customer_id} not found'}, 404
+        return {'error': f'Veterinarian with id {veterinarian_id} not found'}, 404
 
-@customers_bp.route('/register/', methods=['POST'])
-def customer_register():
+@veterinarians_bp.route('/register/', methods=['POST'])
+def veterinarian_register():
     password_input = request.json.get('password')
     if not re.match('^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', password_input):
         raise ValueError('Password must contain minimum 8 characters, at lease one letter, one number and one special characters')
     try:
-        customer = Customer(
+        veterinarian = Veterinarian(
             first_name = request.json['first_name'],
             last_name = request.json['last_name'],
-            contact_number = request.json['contact_number'],
             email = request.json['email'],
-            password = bcrypt.generate_password_hash(password_input).decode('utf-8')
+            password = bcrypt.generate_password_hash(password_input).decode('utf-8'),
+            sex = request.json['sex'],
+            languages = request.json.get('languages'),
+            is_admin = request.json['is_admin'],
+            description = request.json.get('description')
         )
-        db.session.add(customer)
+        db.session.add(veterinarian)
         db.session.commit()
-        return CustomerSchema(exclude=['password']).dump(customer), 201
+        return VeterinarianSchema(exclude=['password']).dump(veterinarian), 201
     except IntegrityError:
         return {'error': 'Email address exists already'}, 409
