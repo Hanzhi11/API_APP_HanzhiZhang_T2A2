@@ -18,6 +18,8 @@ class Veterinarian(db.Model):
     languages = db.Column(db.String)
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
 
+    appointments = db.relationship('Appointment', back_populates='veterinarian')
+
     @validates('last_name', 'first_name')
     def validate_last_name(self, key, value):
         if len(value) == 0:

@@ -3,6 +3,8 @@ from init import db, bcrypt
 from models.customer import Customer
 from models.veterinarian import Veterinarian
 from models.patient import Patient
+from models.appointment import Appointment
+from datetime import datetime
 
 db_commands = Blueprint('db', __name__)
 
@@ -97,4 +99,28 @@ def seed_db():
     ]
     db.session.add_all(patients)
     db.session.commit()
+
+    appointments = [
+        Appointment(
+            date = datetime.strptime('011122', '%d%m%y'),
+            time = datetime.strptime('10:15', '%H:%M'),
+            veterinarian_id = 1,
+            patient_id = 1,
+        ),
+        Appointment(
+            date = datetime.strptime('111122', '%d%m%y'),
+            time = datetime.strptime('10:30', '%H:%M'),
+            veterinarian_id = 1,
+            patient_id = 2,
+        ),
+        Appointment(
+            date = datetime.strptime('121122', '%d%m%y'),
+            time = datetime.strptime('10:30', '%H:%M'),
+            veterinarian_id = 2,
+            patient_id = 1,
+        )
+    ]
+    db.session.add_all(appointments)
+    db.session.commit()
+
     print('Tables seeded')
