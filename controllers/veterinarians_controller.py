@@ -58,4 +58,3 @@ def veterinarian_register():
     db.session.add(veterinarian)
     db.session.commit()
     return VeterinarianSchema(exclude=['password']).dump(veterinarian), 201
-
