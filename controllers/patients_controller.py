@@ -2,7 +2,6 @@ from flask import Blueprint, request
 import gb
 from models.patient import PatientSchema, Patient
 from init import db
-from sqlalchemy.exc import IntegrityError
 
 
 patients_bp = Blueprint('patients', __name__, url_prefix='/patients')
@@ -36,19 +35,14 @@ def update_patient(patient_id):
 
 @patients_bp.route('/register/', methods=['POST'])
 def patient_register():
-    try:
-        patient = Patient(
-            name = request.json['name'],
-            age = request.json['age'],
-            weight = request.json['weight'],
-            sex = request.json['sex'],
-            species = request.json['species'],
-            customer_id = request.json['customer_id']
-        )
-        db.session.add(patient)
-        db.session.commit()
-        return PatientSchema().dump(patient), 201
-    except KeyError as e:
-        return {'error': f'{e.args[0]} is missing'}, 400
-    except IntegrityError:
-        return {'error': f'Patient {patient.name} exists already with customer id {patient.customer_id}'}, 409
+    patient = Patient(
+        name = request.json['name'],
+        age = request.json['age'],
+        weight = request.json['weight'],
+        sex = request.json['sex'],
+        species = request.json['species'],
+        customer_id = request.json['customer_id']
+    )
+    db.session.add(patient)
+    db.session.commit()
+    return PatientSchema().dump(patient), 201

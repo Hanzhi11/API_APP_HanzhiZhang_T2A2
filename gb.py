@@ -14,7 +14,7 @@ def filter_one_record(model, id):
 
 def validate_password(password):
     if isinstance(password, NoneType):
-        raise ValueError("No password provided")
+        raise KeyError('password')
     if not re.match('^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', password):
         raise ValueError('Password must contain minimum 8 characters, at lease one letter, one number and one special characters')
     return True
@@ -22,7 +22,7 @@ def validate_password(password):
 def required_record(model, id):
     record = filter_one_record(model, id)
     if not record:
-        raise NoResultFound(f'Veterinarian with id {id} not found')
+        raise NoResultFound(f'{model.__name__} with id {id} not found')
     return record
 
 def if_empty_convert_to_null(value):
