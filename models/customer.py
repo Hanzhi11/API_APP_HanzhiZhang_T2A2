@@ -15,6 +15,8 @@ class Customer(db.Model):
     password = db.Column(db.String, nullable=False)
     contact_number = db.Column(db.String(10), nullable=False)
 
+    patients = db.relationship('Patient', back_populates='customer', cascade='all, delete')
+
     @validates('last_name', 'first_name')
     def validate_last_name(self, key, value):
         if len(value) == 0:
@@ -39,7 +41,7 @@ class CustomerSchema(ma.Schema):
     # password = fields.String(required=True, validate=Regexp('^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', error='Password must contain minimum 8 characters, at lease one letter, one number and one special characters'))
     # email = fields.String(required=True, validate=Regexp('^([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$', error='Invalid email address'))
     # contact_number = fields.String(required=True, validate=And(Length(equal=10, error='Length of contact number must be 10'), Regexp('^[0-9]*{10, 10}$', error='Contact number must contain numbers only')))
-
+    patients = fields.List(fields.Nested('PatientSchema', exclude=['customer']))
         
     class Meta:
         fields = ('id', 'first_name', 'last_name', 'email', 'password', 'contact_number')

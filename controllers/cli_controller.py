@@ -2,6 +2,7 @@ from flask import Blueprint
 from init import db, bcrypt
 from models.customer import Customer
 from models.veterinarian import Veterinarian
+from models.patient import Patient
 
 db_commands = Blueprint('db', __name__)
 
@@ -68,4 +69,32 @@ def seed_db():
     db.session.add_all(veterinarians)
     db.session.commit()
 
+    patients = [
+        Patient(
+            name = 'Lily',
+            age = 10,
+            weight = 8,
+            sex = 'Female',
+            species = 'dog',
+            customer_id = 1
+        ),
+        Patient(
+            name = 'May',
+            age = 1,
+            weight = 5,
+            sex = 'Male',
+            species = 'cat',
+            customer_id = 1
+        ),
+        Patient(
+            name = 'July',
+            age = 10,
+            weight = 2,
+            sex = 'Male',
+            species = 'bird',
+            customer_id = 2
+        )
+    ]
+    db.session.add_all(patients)
+    db.session.commit()
     print('Tables seeded')
