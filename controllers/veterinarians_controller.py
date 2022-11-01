@@ -64,3 +64,5 @@ def veterinarian_register():
         return VeterinarianSchema(exclude=['password']).dump(veterinarian), 201
     except IntegrityError:
         return {'error': 'Email address exists already'}, 409
+    except KeyError as e:
+        return {'error': f'{e.args[0]} is missing'}, 400
