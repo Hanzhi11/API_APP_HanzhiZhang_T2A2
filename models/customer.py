@@ -41,9 +41,9 @@ class CustomerSchema(ma.Schema):
     # password = fields.String(required=True, validate=Regexp('^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', error='Password must contain minimum 8 characters, at lease one letter, one number and one special characters'))
     # email = fields.String(required=True, validate=Regexp('^([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$', error='Invalid email address'))
     # contact_number = fields.String(required=True, validate=And(Length(equal=10, error='Length of contact number must be 10'), Regexp('^[0-9]*{10, 10}$', error='Contact number must contain numbers only')))
-    patients = fields.List(fields.Nested('PatientSchema', exclude=['customer']))
+    patients = fields.List(fields.Nested('PatientSchema', only=['name', 'age', 'weight', 'sex', 'species', 'appointments']))
         
     class Meta:
-        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'contact_number')
+        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'contact_number', 'patients')
 
     

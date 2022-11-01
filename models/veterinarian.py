@@ -50,6 +50,7 @@ class VeterinarianSchema(ma.Schema):
     # email = fields.String(required=True, validate=Regexp('^([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$', error='Invalid email address'))
     # first_name = fields.String(required=True, validate=Length(min=1, error='invalid first name'))
     # last_name = fields.String(required=True, validate=Length(min=1, error="invalid last name"))
-        
+    appointments = fields.List(fields.Nested('AppointmentSchema', only=['date', 'time', 'patient_id', 'patient']))
+
     class Meta:
-        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'description', 'sex', 'languages', 'is_admin')
+        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'description', 'sex', 'languages', 'is_admin', 'appointments')

@@ -40,8 +40,8 @@ class Patient(db.Model):
         return value
 
 class PatientSchema(ma.Schema):
-    customer = fields.Nested('CustomerSchema', exclude=['password', 'id'])
-    appointments = fields.List(fields.Nested('AppointmentSchema'))
+    customer = fields.Nested('CustomerSchema', only=['first_name', 'last_name', 'email', 'contact_number'])
+    appointments = fields.List(fields.Nested('AppointmentSchema', only=['date', 'time', 'veterinarian', 'veterinarian_id']))
 
     class Meta:
-        fields = ('id', 'name', 'age', 'weight', 'sex', 'species', 'customer_id', 'customer')
+        fields = ('id', 'name', 'age', 'weight', 'sex', 'species', 'customer_id', 'customer', 'appointments')

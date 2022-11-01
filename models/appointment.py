@@ -26,8 +26,8 @@ def validate_time(time):
     print(time.strftime('%H:%M:%S').minute)
 
 class AppointmentSchema(ma.Schema):
-    patient = fields.Nested('PatientSchema', exclude=['id'])
-    veterinarian = fields.Nested('VeterinarianSchema', exclude=['password', 'id'])
+    patient = fields.Nested('PatientSchema', only=['name', 'age', 'weight', 'sex', 'species', 'customer_id', 'customer'])
+    veterinarian = fields.Nested('VeterinarianSchema', only=['first_name', 'last_name', 'email'])
 
     class Meta:
         fields = ['id', 'date', 'time', 'veterinarian_id', 'veterinarian', 'patient', 'patient_id']

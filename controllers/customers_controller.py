@@ -16,7 +16,6 @@ def get_one_customer(customer_id):
     customer = gb.required_record(Customer, customer_id)
     return CustomerSchema(exclude=['password']).dump(customer)
 
-
 @customers_bp.route('/<int:customer_id>/', methods=['DELETE'])
 def delete_customer(customer_id):
     customer = gb.required_record(Customer, customer_id)
