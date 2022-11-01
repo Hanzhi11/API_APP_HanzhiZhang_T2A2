@@ -70,13 +70,16 @@ def delete_veterinarian(veterinarian_id):
 @veterinarians_bp.route('/<int:veterinarian_id>/', methods=['PUT', 'PATCH'])
 def update_veterinarian(veterinarian_id):
     veterinarian = required_veterinarian(veterinarian_id)
-    for key in list(request.json.keys()):
-        if key in ['languages', 'description']:
-            setattr(veterinarian, key, nullable_value_converter(veterinarian, key))
-        else:
-            setattr(veterinarian, key, required_value_converter(veterinarian, key))
-    db.session.commit()
-    return VeterinarianSchema(exclude=['password']).dump(veterinarian)
+    try:
+        for key in list(request.json.keys()):
+            if key in ['languages', 'description']:
+                setattr(veterinarian, key, nullable_value_converter(veterinarian, key))
+            else:
+                setattr(veterinarian, key, required_value_converter(veterinarian, key))
+        db.session.commit()
+        return VeterinarianSchema(exclude=['password']).dump(veterinarian)
+    except IntegrityError:
+        return {'error': 'Email address exists already'}, 409
 
 @veterinarians_bp.route('/register/', methods=['POST'])
 def veterinarian_register():
