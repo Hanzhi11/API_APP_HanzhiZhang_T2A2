@@ -4,6 +4,7 @@ from init import db, ma, bcrypt, jwt
 from controllers.cli_controller import db_commands
 from controllers.customers_controller import customers_bp
 from controllers.veterinarians_controller import veterinarians_bp
+from controllers.patients_controller import patients_bp
 from sqlalchemy.exc import NoResultFound
 
 
@@ -40,5 +41,6 @@ def create_app():
     app.register_blueprint(db_commands)
     app.register_blueprint(customers_bp)    
     app.register_blueprint(veterinarians_bp)    
+    app.register_blueprint(patients_bp)    
 
     return app

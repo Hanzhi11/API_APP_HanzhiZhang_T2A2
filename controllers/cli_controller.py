@@ -79,7 +79,7 @@ def seed_db():
             customer_id = 1
         ),
         Patient(
-            name = 'May',
+            name = 'Jan',
             age = 1,
             weight = 5,
             sex = 'Male',
