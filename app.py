@@ -10,9 +10,9 @@ from sqlalchemy.exc import NoResultFound
 def create_app():
     app = Flask(__name__)
 
-    # @app.errorhandler(404)
-    # def not_found(err):
-    #     return {'error': str(err)}, 404
+    @app.errorhandler(404)
+    def not_found(err):
+        return {'error': str(err)}, 404
 
     @app.errorhandler(405)
     def method_error(err):

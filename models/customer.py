@@ -15,6 +15,12 @@ class Customer(db.Model):
     password = db.Column(db.String, nullable=False)
     contact_number = db.Column(db.String(10), nullable=False)
 
+    @validates('last_name', 'first_name')
+    def validate_last_name(self, key, value):
+        if len(value) == 0:
+            raise ValueError(f'Invalid {key}')
+        return value
+
     @validates('email')
     def validate_email(self, key, value):
         if not re.match('^([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$', value):
