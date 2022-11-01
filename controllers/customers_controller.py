@@ -1,17 +1,21 @@
 from flask import Blueprint, request
 from init import db, bcrypt
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, create_access_token, get_jwt
 from models.customer import CustomerSchema, Customer
 import gb
+from datetime import timedelta
 
 customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
 
 @customers_bp.route('/')
+@jwt_required()
 def get_all_customers():
+    gb.is_admin()
     customers = gb.filter_all_records(Customer)
     return CustomerSchema(many=True, exclude=['password']).dump(customers)
 
 @customers_bp.route('/<int:customer_id>/')
+@jwt_required()
 def get_one_customer(customer_id):
     customer = gb.required_record(Customer, customer_id)
     return CustomerSchema(exclude=['password']).dump(customer)
@@ -47,4 +51,16 @@ def customer_register():
     db.session.add(customer)
     db.session.commit()
     return CustomerSchema(exclude=['password']).dump(customer), 201
+
+@customers_bp.route('/login/', methods=['POST'])
+def customer_login():
+    email=request.json['email']
+    password = request.json['password']
+    customer = gb.filter_one_record_by_email(Customer, email)
+    if customer and bcrypt.check_password_hash(customer.password, password):
+        identity = ''.join(['C', str(customer.id)])
+        token = create_access_token(identity=identity, expires_delta=timedelta(days=1))
+        return {'email': customer.email, 'token': token}
+    else:
+        return {'error': 'Invalid email or passord'}, 401
 

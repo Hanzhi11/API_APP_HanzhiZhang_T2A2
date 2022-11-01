@@ -25,6 +25,10 @@ def create_app():
     def bad_request(err):
         return {'error': str(err)}, 400
 
+    @app.errorhandler(401)
+    def unauthorized_error(err):
+        return {'error': str(err)}, 401
+
     @app.errorhandler(ValueError)
     def value_error(err):
         return {'error': str(err)}, 403
@@ -56,7 +60,10 @@ def create_app():
     def key_error(err):
         return {'error': f'{err.args[0]} is required'}, 400
 
+
+
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
+    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 
     db.init_app(app)
     ma.init_app(app)

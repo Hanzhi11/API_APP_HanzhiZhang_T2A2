@@ -4,6 +4,8 @@ from init import db, bcrypt
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models.veterinarian import VeterinarianSchema, Veterinarian
 import gb
+from flask_jwt_extended import create_access_token, get_jwt_identity
+from datetime import timedelta
 
 veterinarians_bp = Blueprint('veterinarians', __name__, url_prefix='/veterinarians')
     
@@ -58,3 +60,16 @@ def veterinarian_register():
     db.session.add(veterinarian)
     db.session.commit()
     return VeterinarianSchema(exclude=['password']).dump(veterinarian), 201
+
+
+@veterinarians_bp.route('/login/', methods=['POST'])
+def veterinarian_login():
+    email=request.json['email']
+    password = request.json['password']
+    veterinarian = gb.filter_one_record_by_email(Veterinarian, email)
+    if veterinarian and bcrypt.check_password_hash(veterinarian.password, password):
+        identity = ''.join(['V', str(veterinarian.id)])
+        token = create_access_token(identity=identity, expires_delta=timedelta(days=1))
+        return {'email': veterinarian.email, 'token': token}
+    else:
+        return {'error': 'Invalid email or passord'}, 401
