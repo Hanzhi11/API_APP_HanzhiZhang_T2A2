@@ -1,4 +1,4 @@
-from flask import Blueprint, request, abort
+from flask import Blueprint, request
 import gb
 from models.patient import PatientSchema, Patient
 from models.appointment import Appointment
@@ -26,11 +26,11 @@ def is_patient_authorized_person(patient_id):
 @jwt_required()
 def get_all_patients():
     if gb.is_admin():
-        stmt = db.select(Patient)
+        stmt = db.select(Patient) # 
         patients = db.session.scalars(stmt)
         return PatientSchema(many=True).dump(patients)
     else:
-        abort(401)
+        return {'error': 'You are not an administrator.'}, 401
 
 @patients_bp.route('/<int:patient_id>/')
 @jwt_required()
@@ -39,7 +39,7 @@ def get_one_patient(patient_id):
         patient = gb.required_record(Patient, patient_id)
         return PatientSchema().dump(patient)
     else:
-        abort(401)
+        return {'error': 'You are not authorized to view the information.'}, 401
 
 @patients_bp.route('/<int:patient_id>/', methods=['DELETE'])
 @jwt_required()
@@ -50,7 +50,7 @@ def delete_patient(patient_id):
         db.session.commit()
         return {'msg': f'Patient {patient.name} deleted successfully'}
     else:
-        abort(401)
+        return {'error': 'You are not an administrator.'}, 401
 
 @patients_bp.route('/<int:patient_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
@@ -62,7 +62,7 @@ def update_patient(patient_id):
         db.session.commit()
         return PatientSchema().dump(patient)
     else:
-        abort(401)
+        return {'error': 'You are not authorized to update the information.'}, 401
 
 
 @patients_bp.route('/register/', methods=['POST'])

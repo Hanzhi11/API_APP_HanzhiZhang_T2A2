@@ -1,4 +1,4 @@
-from flask import Blueprint, request, abort
+from flask import Blueprint, request
 from init import db, bcrypt
 from flask_jwt_extended import jwt_required, create_access_token
 from models.customer import CustomerSchema, Customer
@@ -31,7 +31,7 @@ def get_all_customers():
         customers = gb.filter_all_records(Customer)
         return CustomerSchema(many=True, exclude=['password']).dump(customers)
     else:
-        abort(401)
+        return {'error': 'You are not an administrator.'}, 401
 
 @customers_bp.route('/<int:customer_id>/')
 @jwt_required()
@@ -40,7 +40,7 @@ def get_one_customer(customer_id):
         customer = gb.required_record(Customer, customer_id)
         return CustomerSchema(exclude=['password']).dump(customer)
     else:
-        abort(401)
+        return {'error': 'You are not authorized to view the information.'}, 401
 
 @customers_bp.route('/<int:customer_id>/', methods=['DELETE'])
 @jwt_required()
@@ -51,20 +51,20 @@ def delete_customer(customer_id):
         db.session.commit()
         return {'msg': f'Customer {customer.first_name} {customer.last_name} deleted successfully'}
     else:
-        abort(401)
+        return {'error': 'You are not an administrator.'}, 401
 
 
 @customers_bp.route('/<int:customer_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_customer(customer_id):
-    if gb.is_admin() or is_authorized_customer(customer_id) or gb.is_authorized_veterinarians(customer_id):
+    if gb.is_admin() or is_authorized_customer(customer_id) or is_authorized_veterinarians(customer_id):
         customer = gb.required_record(Customer, customer_id)
         for key in list(request.json.keys()):
             setattr(customer, key, gb.required_value_converter(customer, key))
         db.session.commit()
         return CustomerSchema(exclude=['password']).dump(customer)
     else:
-        abort(401)
+        return {'error': 'You are not authorized to update the information.'}, 401
 
 
 @customers_bp.route('/register/', methods=['POST'])

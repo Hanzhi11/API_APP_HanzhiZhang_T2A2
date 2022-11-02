@@ -1,8 +1,9 @@
-from flask import Blueprint, request, abort
+from flask import Blueprint, request
 import gb
 from init import db
 from models.appointment import AppointmentSchema, Appointment
 from models.patient import Patient
+from flask_jwt_extended import jwt_required
 
 
 appointments_bp = Blueprint('appointments', __name__, url_prefix='/appointments')
@@ -28,16 +29,16 @@ def get_all_appointments():
         appointments = gb.filter_all_records(Appointment)
         return AppointmentSchema(many=True).dump(appointments)
     else:
-        abort(401)
+        return {'error': 'You are not an administrator.'}, 401
 
 @appointments_bp.route('/<int:appointment_id>/')
 @jwt_required()
 def get_one_appointment(appointment_id):
-    if gb.is_admin() or gb.is_appointment_authorized_person(appointment_id):
+    if gb.is_admin() or is_appointment_authorized_person(appointment_id):
         appointment = gb.required_record(Appointment, appointment_id)
         return AppointmentSchema().dump(appointment)
     else:
-        abort(401)
+       return {'error': 'You are not authorized to view the information.'}, 401
 
 @appointments_bp.route('/<int:appointment_id>/', methods=['DELETE'])
 @jwt_required()
@@ -48,20 +49,20 @@ def delete_appointment(appointment_id):
         db.session.commit()
         return {'msg': f'Appointment at {appointment.time} on {appointment.date} deleted successfully for patient {appointment.patient_id}'}
     else:
-        abort(401)
+        return {'error': 'You are not an administrator.'}, 401
 
 
 @appointments_bp.route('/<int:appointment_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_appointment(appointment_id):
-    if gb.is_admin() or gb.is_appointment_authorized_person(appointment_id):
+    if gb.is_admin() or is_appointment_authorized_person(appointment_id):
         appointment = gb.required_record(Appointment, appointment_id)
         for key in list(request.json.keys()):
             setattr(appointment, key, gb.required_value_converter(appointment, key))
         db.session.commit()
         return AppointmentSchema().dump(appointment)
     else:
-        abort(401)
+        return {'error': 'You are not authorized to update the information.'}, 401
 
 
 @appointments_bp.route('/book/', methods=['POST'])

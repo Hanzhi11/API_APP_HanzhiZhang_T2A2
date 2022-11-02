@@ -1,10 +1,9 @@
 from types import NoneType
-from flask import Blueprint, request, abort
+from flask import Blueprint, request
 from init import db, bcrypt
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, create_access_token
 from models.veterinarian import VeterinarianSchema, Veterinarian
 import gb
-from flask_jwt_extended import create_access_token, get_jwt_identity
 from datetime import timedelta
 
 veterinarians_bp = Blueprint('veterinarians', __name__, url_prefix='/veterinarians')
@@ -39,7 +38,7 @@ def get_all_veterinarians_full_details():
         veterinarians = gb.filter_all_records(Veterinarian)
         return VeterinarianSchema(many=True, exclude=['password']).dump(veterinarians)
     else:
-        abort(401)
+        return {'error': 'You are not an administrator.'}, 401
 
 @veterinarians_bp.route('/<int:veterinarian_id>/')
 def get_one_veterinarian(veterinarian_id):
@@ -53,7 +52,7 @@ def get_one_veterinarian_full_details(veterinarian_id):
         veterinarian = gb.required_record(Veterinarian, veterinarian_id)
         return VeterinarianSchema(exclude=['password']).dump(veterinarian)
     else:
-        abort(401)
+        return {'error': 'You are not authorized to view the information.'}, 401
 
 @veterinarians_bp.route('/<int:veterinarian_id>/appointments/')
 @jwt_required()
@@ -62,7 +61,7 @@ def get_one_veterinarian_appointments(veterinarian_id):
         veterinarian = gb.required_record(Veterinarian, veterinarian_id)
         return VeterinarianSchema(only=['appointments']).dump(veterinarian)
     else:
-        abort(401)
+        return {'error': 'You are not authorized to view the information.'}, 401
 
 @veterinarians_bp.route('/<int:veterinarian_id>/', methods=['DELETE'])
 @jwt_required()
@@ -73,7 +72,7 @@ def delete_veterinarian(veterinarian_id):
         db.session.commit()
         return {'msg': f'Veterinarian {veterinarian.first_name} {veterinarian.last_name} deleted successfully'}
     else:
-        abort(401)
+        return {'error': 'You are not an administrator.'}, 401
 
 
 @veterinarians_bp.route('/<int:veterinarian_id>/', methods=['PUT', 'PATCH'])
@@ -89,7 +88,7 @@ def update_veterinarian(veterinarian_id):
         db.session.commit()
         return VeterinarianSchema(exclude=['password']).dump(veterinarian)
     else:
-        abort(401)
+        return {'error': 'You are not authorized to update the information.'}, 401
 
 
 @veterinarians_bp.route('/register/', methods=['POST'])

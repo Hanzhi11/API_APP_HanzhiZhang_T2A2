@@ -93,7 +93,7 @@ def seed_db():
             weight = 5.2,
             sex = 'Male',
             species = 'cat',
-            customer_id = 1
+            customer_id = 2
         ),
         Patient(
             name = 'April',
@@ -101,7 +101,7 @@ def seed_db():
             weight = 6.1,
             sex = 'Male',
             species = 'rabbit',
-            customer_id = 3
+            customer_id = 2
         ),
         Patient(
             name = 'July',
@@ -109,7 +109,7 @@ def seed_db():
             weight = 2,
             sex = 'Male',
             species = 'bird',
-            customer_id = 2
+            customer_id = 3
         )
     ]
     db.session.add_all(patients)
@@ -120,7 +120,7 @@ def seed_db():
             date = datetime.strptime('011122', '%d%m%y'),
             time = datetime.strptime('10:15', '%H:%M'),
             veterinarian_id = 3,
-            patient_id = 1,
+            patient_id = 3,
         ),
         Appointment(
             date = datetime.strptime('111122', '%d%m%y'),
@@ -138,7 +138,7 @@ def seed_db():
             date = datetime.strptime('121122', '%d%m%y'),
             time = datetime.strptime('10:30', '%H:%M'),
             veterinarian_id = 2,
-            patient_id = 2,
+            patient_id = 4,
         )
     ]
     db.session.add_all(appointments)
