@@ -114,6 +114,12 @@ def seed_db():
             patient_id = 2,
         ),
         Appointment(
+            date = datetime.strptime('111122', '%d%m%y'),
+            time = datetime.strptime('10:45', '%H:%M'),
+            veterinarian_id = 1,
+            patient_id = 3,
+        ),
+        Appointment(
             date = datetime.strptime('121122', '%d%m%y'),
             time = datetime.strptime('10:30', '%H:%M'),
             veterinarian_id = 2,

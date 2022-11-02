@@ -1,6 +1,5 @@
 from init import db, ma
 from marshmallow import fields
-from marshmallow.validate import Length, Regexp, And
 from sqlalchemy.orm import validates
 import re
 

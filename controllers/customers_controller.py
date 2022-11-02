@@ -1,40 +1,54 @@
-from flask import Blueprint, request
+from flask import Blueprint, request, abort
 from init import db, bcrypt
-from flask_jwt_extended import jwt_required, create_access_token, get_jwt
+from flask_jwt_extended import jwt_required, create_access_token
 from models.customer import CustomerSchema, Customer
 import gb
 from datetime import timedelta
+
 
 customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
 
 @customers_bp.route('/')
 @jwt_required()
 def get_all_customers():
-    gb.is_admin()
-    customers = gb.filter_all_records(Customer)
-    return CustomerSchema(many=True, exclude=['password']).dump(customers)
+    if gb.is_admin():
+        customers = gb.filter_all_records(Customer)
+        return CustomerSchema(many=True, exclude=['password']).dump(customers)
+    else:
+        abort(401)
 
 @customers_bp.route('/<int:customer_id>/')
 @jwt_required()
 def get_one_customer(customer_id):
-    customer = gb.required_record(Customer, customer_id)
-    return CustomerSchema(exclude=['password']).dump(customer)
+    if gb.is_authorized_customer(customer_id):
+        customer = gb.required_record(Customer, customer_id)
+        return CustomerSchema(exclude=['password']).dump(customer)
+    else:
+        abort(401)
 
 @customers_bp.route('/<int:customer_id>/', methods=['DELETE'])
+@jwt_required()
 def delete_customer(customer_id):
-    customer = gb.required_record(Customer, customer_id)
-    db.session.delete(customer)
-    db.session.commit()
-    return {'msg': f'Customer {customer.first_name} {customer.last_name} deleted successfully'}
+    if gb.is_admin():
+        customer = gb.required_record(Customer, customer_id)
+        db.session.delete(customer)
+        db.session.commit()
+        return {'msg': f'Customer {customer.first_name} {customer.last_name} deleted successfully'}
+    else:
+        abort(401)
 
 
 @customers_bp.route('/<int:customer_id>/', methods=['PUT', 'PATCH'])
+@jwt_required()
 def update_customer(customer_id):
-    customer = gb.required_record(Customer, customer_id)
-    for key in list(request.json.keys()):
-        setattr(customer, key, gb.required_value_converter(customer, key))
-    db.session.commit()
-    return CustomerSchema(exclude=['password']).dump(customer)
+    if gb.is_authorized_person(customer_id):
+        customer = gb.required_record(Customer, customer_id)
+        for key in list(request.json.keys()):
+            setattr(customer, key, gb.required_value_converter(customer, key))
+        db.session.commit()
+        return CustomerSchema(exclude=['password']).dump(customer)
+    else:
+        abort(401)
 
 
 @customers_bp.route('/register/', methods=['POST'])

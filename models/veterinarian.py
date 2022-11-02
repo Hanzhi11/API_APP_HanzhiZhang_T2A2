@@ -1,6 +1,5 @@
 from init import db, ma
 from marshmallow import fields
-from marshmallow.validate import Length, Regexp, And
 from sqlalchemy.orm import validates
 import re
 
@@ -18,7 +17,7 @@ class Veterinarian(db.Model):
     languages = db.Column(db.String)
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
 
-    appointments = db.relationship('Appointment', back_populates='veterinarian')
+    appointments = db.relationship('Appointment', back_populates='veterinarian', cascade='all, delete')
 
     @validates('last_name', 'first_name')
     def validate_last_name(self, key, value):
