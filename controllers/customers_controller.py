@@ -2,11 +2,27 @@ from flask import Blueprint, request, abort
 from init import db, bcrypt
 from flask_jwt_extended import jwt_required, create_access_token
 from models.customer import CustomerSchema, Customer
+from models.appointment import Appointment
+from models.patient import Patient
 import gb
 from datetime import timedelta
 
 
 customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
+
+def is_authorized_veterinarians(customer_id):
+    id = gb.get_veterinarian_id()
+    if id:
+        stmt = db.select(Appointment).filter_by(veterinarian_id=id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id)
+        result = db.session.scalar(stmt)
+        print(result)
+        if result:
+            return True
+
+def is_authorized_customer(customer_id):
+    id = gb.get_customer_id()
+    if id == customer_id:
+        return True
 
 @customers_bp.route('/')
 @jwt_required()
@@ -20,7 +36,7 @@ def get_all_customers():
 @customers_bp.route('/<int:customer_id>/')
 @jwt_required()
 def get_one_customer(customer_id):
-    if gb.is_authorized_customer(customer_id) or gb.is_admin():
+    if is_authorized_customer(customer_id) or gb.is_admin():
         customer = gb.required_record(Customer, customer_id)
         return CustomerSchema(exclude=['password']).dump(customer)
     else:
@@ -41,7 +57,7 @@ def delete_customer(customer_id):
 @customers_bp.route('/<int:customer_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_customer(customer_id):
-    if gb.is_admin() or gb.is_authorized_customer(customer_id) or gb.is_authorized_veterinarians(customer_id):
+    if gb.is_admin() or is_authorized_customer(customer_id) or gb.is_authorized_veterinarians(customer_id):
         customer = gb.required_record(Customer, customer_id)
         for key in list(request.json.keys()):
             setattr(customer, key, gb.required_value_converter(customer, key))

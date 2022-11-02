@@ -8,6 +8,24 @@ from flask_jwt_extended import create_access_token, get_jwt_identity
 from datetime import timedelta
 
 veterinarians_bp = Blueprint('veterinarians', __name__, url_prefix='/veterinarians')
+
+def is_authorized_veterinarian(veterinarian_id):
+    id = gb.get_veterinarian_id()
+    if id == veterinarian_id:
+        return True
+
+def if_empty_convert_to_null(value):
+    if len(value) == 0:
+        return None
+    else:
+        return value
+
+def nullable_value_converter(self, key):
+    value = request.json.get(key)
+    if isinstance(value, NoneType):
+        return self.__dict__[key]
+    else:
+        return if_empty_convert_to_null(value)
     
 @veterinarians_bp.route('/')
 def get_all_veterinarians():
@@ -31,7 +49,7 @@ def get_one_veterinarian(veterinarian_id):
 @veterinarians_bp.route('/<int:veterinarian_id>/full_details/')
 @jwt_required()
 def get_one_veterinarian_full_details(veterinarian_id):
-    if gb.is_admin() or gb.is_authorized_veterinarian(veterinarian_id):
+    if gb.is_admin() or is_authorized_veterinarian(veterinarian_id):
         veterinarian = gb.required_record(Veterinarian, veterinarian_id)
         return VeterinarianSchema(exclude=['password']).dump(veterinarian)
     else:
@@ -40,7 +58,7 @@ def get_one_veterinarian_full_details(veterinarian_id):
 @veterinarians_bp.route('/<int:veterinarian_id>/appointments/')
 @jwt_required()
 def get_one_veterinarian_appointments(veterinarian_id):
-    if gb.is_admin() or gb.is_authorized_veterinarian(veterinarian_id):
+    if gb.is_admin() or is_authorized_veterinarian(veterinarian_id):
         veterinarian = gb.required_record(Veterinarian, veterinarian_id)
         return VeterinarianSchema(only=['appointments']).dump(veterinarian)
     else:
@@ -61,11 +79,11 @@ def delete_veterinarian(veterinarian_id):
 @veterinarians_bp.route('/<int:veterinarian_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_veterinarian(veterinarian_id):
-    if gb.is_admin() or gb.is_authorized_veterinarian(veterinarian_id):
+    if gb.is_admin() or is_authorized_veterinarian(veterinarian_id):
         veterinarian = gb.required_record(Veterinarian, veterinarian_id)
         for key in list(request.json.keys()):
             if key in ['languages', 'description']:
-                setattr(veterinarian, key, gb.nullable_value_converter(veterinarian, key))
+                setattr(veterinarian, key, nullable_value_converter(veterinarian, key))
             else:
                 setattr(veterinarian, key, gb.required_value_converter(veterinarian, key))
         db.session.commit()
@@ -85,9 +103,9 @@ def veterinarian_register():
         email = request.json['email'],
         password = bcrypt.generate_password_hash(password_input).decode('utf-8'),
         sex = request.json['sex'],
-        languages = gb.if_empty_convert_to_null(request.json.get('languages')),
+        languages = if_empty_convert_to_null(request.json.get('languages')),
         is_admin = request.json['is_admin'],
-        description = gb.if_empty_convert_to_null(request.json.get('description'))
+        description = if_empty_convert_to_null(request.json.get('description'))
     )
 
     db.session.add(veterinarian)

@@ -2,10 +2,24 @@ from flask import Blueprint, request, abort
 import gb
 from init import db
 from models.appointment import AppointmentSchema, Appointment
-from sqlalchemy.exc import IntegrityError
+from models.patient import Patient
 
 
 appointments_bp = Blueprint('appointments', __name__, url_prefix='/appointments')
+
+def is_appointment_authorized_person(appointment_id):
+    customer_id = gb.get_customer_id()
+    veterinarian_id = gb.get_veterinarian_id()
+    if customer_id:
+        stmt = db.select(Appointment).filter_by(appointment_id=id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id)
+        result = db.session.scalar(stmt)
+        if result:
+            return True
+    elif veterinarian_id:
+        stmt = db.select(Appointment).filter_by(veterinarian_id=veterinarian_id, appointment_id=appointment_id)
+        result = db.session.scalar(stmt)
+        if result:
+            return True
 
 @appointments_bp.route('/')
 @jwt_required()
