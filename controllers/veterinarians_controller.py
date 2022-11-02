@@ -23,15 +23,6 @@ def get_all_veterinarians_full_details():
     else:
         abort(401)
 
-@veterinarians_bp.route('/appointments/')
-@jwt_required()
-def get_all_appointments():
-    if gb.is_admin():
-        veterinarians = gb.filter_all_records(Veterinarian)
-        return VeterinarianSchema(many=True, only=['appointments', 'id']).dump(veterinarians)
-    else:
-        abort(401)
-
 @veterinarians_bp.route('/<int:veterinarian_id>/')
 def get_one_veterinarian(veterinarian_id):
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)

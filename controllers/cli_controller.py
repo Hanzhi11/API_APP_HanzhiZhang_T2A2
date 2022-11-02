@@ -29,6 +29,13 @@ def seed_db():
             contact_number = '0412341234'
         ),
         Customer(
+            first_name = 'Ham',
+            last_name = 'Port',
+            email = 'hamport@test.com',
+            password = bcrypt.generate_password_hash('Hamport1!').decode('utf-8'),
+            contact_number = '0412344321'
+        ),
+        Customer(
             first_name = 'Rod',
             last_name = 'Stone',
             email = 'rodstone@test.com',
@@ -83,10 +90,18 @@ def seed_db():
         Patient(
             name = 'Jan',
             age = 1,
-            weight = 5,
+            weight = 5.2,
             sex = 'Male',
             species = 'cat',
             customer_id = 1
+        ),
+        Patient(
+            name = 'April',
+            age = 2,
+            weight = 6.1,
+            sex = 'Male',
+            species = 'rabbit',
+            customer_id = 3
         ),
         Patient(
             name = 'July',
@@ -104,26 +119,26 @@ def seed_db():
         Appointment(
             date = datetime.strptime('011122', '%d%m%y'),
             time = datetime.strptime('10:15', '%H:%M'),
-            veterinarian_id = 1,
+            veterinarian_id = 3,
             patient_id = 1,
         ),
         Appointment(
             date = datetime.strptime('111122', '%d%m%y'),
             time = datetime.strptime('10:30', '%H:%M'),
-            veterinarian_id = 1,
+            veterinarian_id = 3,
             patient_id = 2,
         ),
         Appointment(
             date = datetime.strptime('111122', '%d%m%y'),
             time = datetime.strptime('10:45', '%H:%M'),
             veterinarian_id = 1,
-            patient_id = 3,
+            patient_id = 4,
         ),
         Appointment(
             date = datetime.strptime('121122', '%d%m%y'),
             time = datetime.strptime('10:30', '%H:%M'),
             veterinarian_id = 2,
-            patient_id = 1,
+            patient_id = 2,
         )
     ]
     db.session.add_all(appointments)

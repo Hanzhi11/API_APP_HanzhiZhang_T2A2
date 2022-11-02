@@ -81,6 +81,34 @@ def is_authorized_customer(customer_id):
     if id == customer_id:
         return True
 
+def is_patient_authorized_person(patient_id):
+    customer_id = get_customer_id()
+    veterinarian_id = get_veterinarian_id()
+    if customer_id:
+        stmt = db.select(Patient).filter_by(customer_id=customer_id, id=patient_id)
+        result = db.session.scalar(stmt)
+        if result:
+            return True
+    elif veterinarian_id:
+        stmt = db.select(Appointment).filter_by(veterinarian_id=veterinarian_id, patient_id=patient_id)
+        result = db.session.scalar(stmt)
+        if result:
+            return True
+
+def is_appointment_authorized_person(appointment_id):
+    customer_id = get_customer_id()
+    veterinarian_id = get_veterinarian_id()
+    if customer_id:
+        stmt = db.select(Appointment).filter_by(appointment_id=id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id)
+        result = db.session.scalar(stmt)
+        if result:
+            return True
+    elif veterinarian_id:
+        stmt = db.select(Appointment).filter_by(veterinarian_id=veterinarian_id, appointment_id=appointment_id)
+        result = db.session.scalar(stmt)
+        if result:
+            return True
+
 def is_authorized_veterinarian(veterinarian_id):
     id = get_veterinarian_id()
     if id == veterinarian_id:
@@ -90,11 +118,9 @@ def is_authorized_veterinarians(customer_id):
     id = get_veterinarian_id()
     if id:
         stmt = db.select(Appointment).filter_by(veterinarian_id=id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id)
-        result = db.session.execute(stmt).all()
+        result = db.session.scalar(stmt)
+        print(result)
         if result:
             return True
 
-# def is_authorized_person(customer_id):
-#     if is_admin() or is_authorized_customer(customer_id) or is_authorized_veterinarian(customer_id):
-#         return True
 
