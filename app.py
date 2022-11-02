@@ -54,13 +54,16 @@ def create_app():
 
     @app.errorhandler(DataError)
     def data_error(err):
-        return {'error': str(err)}, 404
+        if 'DatetimeFieldOverflow' in err.args[0]:
+            return {'error': 'Invalid time'}, 403
+        elif 'InvalidDatetimeFormat' in err.args[0]:
+            return {'error': 'Invalid date'}, 403
+        else:
+            return {'error': str(err)}, 404
 
     @app.errorhandler(KeyError)
     def key_error(err):
         return {'error': f'{err.args[0]} is required'}, 400
-
-
 
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL')
     app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')

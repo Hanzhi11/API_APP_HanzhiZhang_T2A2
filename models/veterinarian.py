@@ -3,7 +3,10 @@ from marshmallow import fields
 from sqlalchemy.orm import validates
 import re
 
-
+# Define a veterinarians table in the database with nine columns (i.e. id, first_name, last_name, email, password, description, sex, languages and is_admin).
+# In this table, id is the primary key.
+# This table has a one-to-many relationship with the appointments table.
+# As veterinarians are not allowed to share one email address, email in the table must be unique.
 class Veterinarian(db.Model):
     __tablename__ = 'veterinarians'
 
@@ -45,10 +48,6 @@ class Veterinarian(db.Model):
     
 
 class VeterinarianSchema(ma.Schema):
-    # password = fields.String(required=True, validate=Regexp('^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', error='Password must contain minimum 8 characters, at lease one letter, one number and one special characters'))
-    # email = fields.String(required=True, validate=Regexp('^([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$', error='Invalid email address'))
-    # first_name = fields.String(required=True, validate=Length(min=1, error='invalid first name'))
-    # last_name = fields.String(required=True, validate=Length(min=1, error="invalid last name"))
     appointments = fields.List(fields.Nested('AppointmentSchema', only=['date', 'time', 'patient_id', 'patient']))
 
     class Meta:

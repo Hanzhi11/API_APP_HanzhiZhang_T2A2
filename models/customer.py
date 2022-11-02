@@ -3,7 +3,10 @@ from marshmallow import fields
 from sqlalchemy.orm import validates
 import re
 
-
+# Define a customers table in the database with six columns (i.e. id, first_name, last_name, email, password and contact_number).
+# In this table, id is the primary key.
+# This table has a one-to-many relationship with the patients table.
+# As customers are not allowed to share one email address, email in the table must be unique.
 class Customer(db.Model):
     __tablename__ = 'customers'
 
@@ -37,11 +40,8 @@ class Customer(db.Model):
         return value
 
 class CustomerSchema(ma.Schema):
-    # password = fields.String(required=True, validate=Regexp('^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$', error='Password must contain minimum 8 characters, at lease one letter, one number and one special characters'))
-    # email = fields.String(required=True, validate=Regexp('^([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+$', error='Invalid email address'))
-    # contact_number = fields.String(required=True, validate=And(Length(equal=10, error='Length of contact number must be 10'), Regexp('^[0-9]*{10, 10}$', error='Contact number must contain numbers only')))
     patients = fields.List(fields.Nested('PatientSchema', only=['name', 'age', 'weight', 'sex', 'species', 'appointments']))
-        
+
     class Meta:
         fields = ('id', 'first_name', 'last_name', 'email', 'password', 'contact_number', 'patients')
 

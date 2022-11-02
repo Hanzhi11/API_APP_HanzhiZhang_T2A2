@@ -13,7 +13,7 @@ customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
 def is_authorized_veterinarians(customer_id):
     id = gb.get_veterinarian_id()
     if id:
-        stmt = db.select(Appointment).filter_by(veterinarian_id=id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id)
+        stmt = db.select(Appointment).filter_by(veterinarian_id=id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id) 
         result = db.session.scalar(stmt)
         print(result)
         if result:

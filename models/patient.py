@@ -4,6 +4,11 @@ from init import db, ma
 from marshmallow import fields
 from sqlalchemy import UniqueConstraint
 
+
+# Define a patients table in the database with seven columns (i.e. id, name, age, weight, sex, species and customer_id).
+# In this table, id is the primary key, while customer_id is the foreign key.
+# This table has a relationship with the customers table and the appointments table (one-to-many), respectively.
+# As one customer are not allowed to have many patients with the same name, the combination of name and customer_id must be unique.
 class Patient(db.Model):
     __tablename__ = 'patients'
 

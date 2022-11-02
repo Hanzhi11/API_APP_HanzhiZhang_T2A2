@@ -8,16 +8,19 @@ from datetime import datetime
 
 db_commands = Blueprint('db', __name__)
 
+# create all defined tables in the database
 @db_commands.cli.command('create')
 def create_db():
     db.create_all()
     print('Tables created')
 
+# drop all tables in the database
 @db_commands.cli.command('drop')
 def drop_db():
     db.drop_all()
     print('Tables droped')
 
+# seed all tables (i.e. customers, patients, appointments, veterinarians) in the database
 @db_commands.cli.command('seed')
 def seed_db():
     customers = [
