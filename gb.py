@@ -81,8 +81,12 @@ def is_authorized_customer(customer_id):
     if id == customer_id:
         return True
 
+def is_authorized_veterinarian(veterinarian_id):
+    id = get_veterinarian_id()
+    if id == veterinarian_id:
+        return True
 
-def is_authorized_veterinarian(customer_id):
+def is_authorized_veterinarians(customer_id):
     id = get_veterinarian_id()
     if id:
         stmt = db.select(Appointment).filter_by(veterinarian_id=id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id)
@@ -90,7 +94,7 @@ def is_authorized_veterinarian(customer_id):
         if result:
             return True
 
-def is_authorized_person(customer_id):
-    if is_admin() or is_authorized_customer(customer_id) or is_authorized_veterinarian(customer_id):
-        return True
+# def is_authorized_person(customer_id):
+#     if is_admin() or is_authorized_customer(customer_id) or is_authorized_veterinarian(customer_id):
+#         return True
 

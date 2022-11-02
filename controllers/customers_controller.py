@@ -20,7 +20,7 @@ def get_all_customers():
 @customers_bp.route('/<int:customer_id>/')
 @jwt_required()
 def get_one_customer(customer_id):
-    if gb.is_authorized_customer(customer_id):
+    if gb.is_authorized_customer(customer_id) or gb.is_admin():
         customer = gb.required_record(Customer, customer_id)
         return CustomerSchema(exclude=['password']).dump(customer)
     else:
@@ -41,7 +41,7 @@ def delete_customer(customer_id):
 @customers_bp.route('/<int:customer_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_customer(customer_id):
-    if gb.is_authorized_person(customer_id):
+    if gb.is_admin() or gb.is_authorized_customer(customer_id) or gb.is_authorized_veterinarians(customer_id):
         customer = gb.required_record(Customer, customer_id)
         for key in list(request.json.keys()):
             setattr(customer, key, gb.required_value_converter(customer, key))
