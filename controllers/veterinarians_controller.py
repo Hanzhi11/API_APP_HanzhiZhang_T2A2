@@ -59,6 +59,7 @@ def get_all_veterinarians_full_details():
 def get_one_veterinarian(veterinarian_id):
     # get one record from the veterinarians table in the database with the given veterinarian id
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
+    print(veterinarian)
     return VeterinarianSchema(only=['first_name', 'last_name', 'description', 'email', 'sex', 'languages']).dump(veterinarian)
 
 

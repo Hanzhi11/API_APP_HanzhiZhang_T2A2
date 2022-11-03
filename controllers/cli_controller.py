@@ -58,7 +58,7 @@ def seed_db():
             password = bcrypt.generate_password_hash('Samsky1?').decode('utf-8'),
             description = 'Lorem ipsum dolor sit amet.',
             sex = 'Male',
-            languages = 'Korean',
+            languages = ['Korean', 'French'],
             is_admin = True
         ),
         Veterinarian(
@@ -120,26 +120,26 @@ def seed_db():
 
     appointments = [
         Appointment(
-            date = datetime.strptime('011122', '%d%m%y'),
-            time = datetime.strptime('10:15', '%H:%M'),
+            date = '2022-11-3',
+            time = '10:15',
             veterinarian_id = 3,
             patient_id = 3,
         ),
         Appointment(
-            date = datetime.strptime('111122', '%d%m%y'),
-            time = datetime.strptime('10:30', '%H:%M'),
+            date = '2022-11-4',
+            time = '10:30',
             veterinarian_id = 3,
             patient_id = 2,
         ),
         Appointment(
-            date = datetime.strptime('111122', '%d%m%y'),
-            time = datetime.strptime('10:45', '%H:%M'),
+            date = '2022-11-2',
+            time = '10:45',
             veterinarian_id = 1,
             patient_id = 4,
         ),
         Appointment(
-            date = datetime.strptime('121122', '%d%m%y'),
-            time = datetime.strptime('10:30', '%H:%M'),
+            date = '2022-11-3',
+            time = '10:30',
             veterinarian_id = 2,
             patient_id = 4,
         )

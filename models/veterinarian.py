@@ -1,12 +1,25 @@
 from init import db, ma
 from marshmallow import fields
 from sqlalchemy.orm import validates
-import re
+import re, enum
+from marshmallow_enum import EnumField
 
-# Define a veterinarians table in the database with nine columns (i.e. id, first_name, last_name, email, password, description, sex, languages and is_admin).
+# Define a veterinarians table in the database with nine columns (i.e. id, first_name, last_name, email, password, description, sex, languages and is_admin). Each column has its own contraints.
 # In this table, id is the primary key.
 # This table has a one-to-many relationship with the appointments table.
 # As veterinarians are not allowed to share one email address, email in the table must be unique.
+class LanguagesEnum(enum.Enum):
+    Mandarin = 1
+    Cantonese = 2
+    Korean = 3
+    Japanese = 4
+    Spanish = 5
+    French = 6
+
+class SexEnum(enum.Enum):
+    Male = 1
+    Female = 2
+
 class Veterinarian(db.Model):
     __tablename__ = 'veterinarians'
 
@@ -16,8 +29,8 @@ class Veterinarian(db.Model):
     email = db.Column(db.String(50), nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
     description = db.Column(db.Text)
-    sex = db.Column(db.String(6), nullable=False)
-    languages = db.Column(db.String)
+    sex = db.Column(db.Enum(SexEnum), nullable=False)
+    languages = db.Column(db.ARRAY(db.Enum(LanguagesEnum)))
     is_admin = db.Column(db.Boolean, nullable=False, default=False)
 
     appointments = db.relationship('Appointment', back_populates='veterinarian', cascade='all, delete')
@@ -34,12 +47,6 @@ class Veterinarian(db.Model):
             raise ValueError('Invalid email')
         return value
 
-    @validates('sex')
-    def validate_sex(self, key, value):
-        if value not in ['Male', 'Female']:
-            raise ValueError('Invalid sex')
-        return value
-
     @validates('is_admin')
     def validate_is_admin(self, key, value):
         if not isinstance(value, bool):
@@ -49,6 +56,8 @@ class Veterinarian(db.Model):
 
 class VeterinarianSchema(ma.Schema):
     appointments = fields.List(fields.Nested('AppointmentSchema', only=['date', 'time', 'patient_id', 'patient']))
+    sex = EnumField(SexEnum)
+    languages = fields.List(EnumField(LanguagesEnum))
 
     class Meta:
         fields = ('id', 'first_name', 'last_name', 'email', 'password', 'description', 'sex', 'languages', 'is_admin', 'appointments')

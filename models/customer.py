@@ -3,7 +3,7 @@ from marshmallow import fields
 from sqlalchemy.orm import validates
 import re
 
-# Define a customers table in the database with six columns (i.e. id, first_name, last_name, email, password and contact_number).
+# Define a customers table in the database with six columns (i.e. id, first_name, last_name, email, password and contact_number). Each colum has its own constraints.
 # In this table, id is the primary key.
 # This table has a one-to-many relationship with the patients table.
 # As customers are not allowed to share one email address, email in the table must be unique.

@@ -58,6 +58,15 @@ def create_app():
             return {'error': 'Invalid time'}, 403
         elif 'InvalidDatetimeFormat' in err.args[0]:
             return {'error': 'Invalid date'}, 403
+        elif 'NumericValueOutOfRange' in err.args[0]:
+            return {'error': 'Unreasonable weight'}, 403
+        elif 'InvalidTextRepresentation' in err.args[0]:
+            if 'speciesenum' in err.args[0]:
+                return {'error': 'Invalid species - Species must be dog, cat, bird, fish or rabbit'}, 403
+            elif 'languagesenum' in err.args[0]:
+                return {'error': 'Invalid languages'}, 403
+            elif 'sexenum' in err.args[0]:
+                return {'error': 'Invalid sex - Sex must be Male or Female'}, 403
         else:
             return {'error': str(err)}, 404
 

@@ -3,21 +3,34 @@ from sqlalchemy.orm import validates
 from init import db, ma
 from marshmallow import fields
 from sqlalchemy import UniqueConstraint
+import enum
+from marshmallow_enum import EnumField
 
 
-# Define a patients table in the database with seven columns (i.e. id, name, age, weight, sex, species and customer_id).
+# Define a patients table in the database with seven columns (i.e. id, name, age, weight, sex, species and customer_id). Each colum has its own constraints.
 # In this table, id is the primary key, while customer_id is the foreign key.
 # This table has a relationship with the customers table and the appointments table (one-to-many), respectively.
 # As one customer are not allowed to have many patients with the same name, the combination of name and customer_id must be unique.
+class SpeciesEnum(enum.Enum):
+    dog = 1
+    cat = 2
+    bird = 3
+    fish = 4
+    rabbit = 5
+
+class SexEnum(enum.Enum):
+    Male = 1
+    Female = 2
+
 class Patient(db.Model):
     __tablename__ = 'patients'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(25), nullable=False)
     age = db.Column(db.Integer, nullable=False)
-    weight = db.Column(db.Float, nullable=False)
-    sex = db.Column(db.String(6), nullable=False)
-    species = db.Column(db.String, nullable=False)
+    weight = db.Column(db.Numeric(5, 2), nullable=False)
+    sex = db.Column(db.Enum(SexEnum), nullable=False)
+    species = db.Column(db.Enum(SpeciesEnum), nullable=False)
 
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
 
@@ -38,15 +51,12 @@ class Patient(db.Model):
             raise ValueError('Invalid sex. Sex must be Male or Female.')
         return value
 
-    @validates('species')
-    def validate_species(self, key, value):
-        if value not in ['dog', 'cat','bird', 'fish', 'rabbit']:
-            raise ValueError('Invalid species. Species must be dog, cat, bird, fish or rabbit.')
-        return value
 
 class PatientSchema(ma.Schema):
     customer = fields.Nested('CustomerSchema', only=['first_name', 'last_name', 'email', 'contact_number'])
     appointments = fields.List(fields.Nested('AppointmentSchema', only=['date', 'time', 'veterinarian', 'veterinarian_id']))
+    sex = EnumField(SexEnum)
+    species = EnumField(SpeciesEnum)
 
     class Meta:
         fields = ('id', 'name', 'age', 'weight', 'sex', 'species', 'customer_id', 'customer', 'appointments')

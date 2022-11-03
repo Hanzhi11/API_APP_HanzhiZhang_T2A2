@@ -3,7 +3,7 @@ from init import db, ma
 from sqlalchemy import UniqueConstraint
 from marshmallow import fields
 
-# Define an appointments table in the database with five columns (i.e. id, date, time, veterinarian_id and patient_id).
+# Define an appointments table in the database with five columns (i.e. id, date, time, veterinarian_id and patient_id). Each colum has its own constraints.
 # In this table, id is the primary key, while veterinarian_id and patient_id are foreign keys.
 # This table has a relationship with the veterinarians table and the patients table, respectively.
 # As one veterinarian cannot have an appointment at the same time on the same date, the combination of date, time and veterinarian_id must be unique.
@@ -28,7 +28,6 @@ class Appointment(db.Model):
 
     @validates('time')
     def validate_time(self, key, value):
-        print(value[3:5])
         if value[3:5] not in ['00', '15', '30', '45']:
             raise ValueError('Invalid time')
         return value

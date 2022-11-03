@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from init import db, bcrypt
+from init import db, bcrypt, jwt
 from flask_jwt_extended import jwt_required, create_access_token
 from models.customer import CustomerSchema, Customer
 from models.appointment import Appointment
