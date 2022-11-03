@@ -27,7 +27,13 @@ def is_appointment_authorized_person(appointment_id):
             return True
 
 
-@appointments_bp.route('/')
+# get all appointments with one veterinarian
+def filter_all_records(id):
+    stmt = db.select(Appointment).filter_by(veterinarian_id=id)
+    return db.session.scalars(stmt)
+
+# read all appointments
+@appointments_bp.route('/admin')
 @jwt_required()
 def get_all_appointments():
     if gb.is_admin():
@@ -36,8 +42,18 @@ def get_all_appointments():
         return AppointmentSchema(many=True).dump(appointments)
     else:
         return {'error': 'You are not an administrator.'}, 401
+        
+
+# read all appointments of the veterinarian who has logged in
+@appointments_bp.route('/')
+@jwt_required()
+def get_veterinarian_all_appointments():
+    id = gb.get_veterinarian_id()
+    appointments = filter_all_records(id)
+    return AppointmentSchema(many=True).dump(appointments)
 
 
+# read one appointment
 @appointments_bp.route('/<int:appointment_id>/')
 @jwt_required()
 def get_one_appointment(appointment_id):
@@ -48,6 +64,8 @@ def get_one_appointment(appointment_id):
     else:
        return {'error': 'You are not authorized to view the information.'}, 401
 
+
+# delete one appointment
 @appointments_bp.route('/<int:appointment_id>/', methods=['DELETE'])
 @jwt_required()
 def delete_appointment(appointment_id):
@@ -61,11 +79,12 @@ def delete_appointment(appointment_id):
         return {'error': 'You are not an administrator.'}, 401
 
 
+# update one appointment
 @appointments_bp.route('/<int:appointment_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_appointment(appointment_id):
     if gb.is_admin() or is_appointment_authorized_person(appointment_id):
-        # update one record from the appointments table with the given appointment_id
+        # update one record in the appointments table with the given appointment_id using the information contained in the request
         appointment = gb.required_record(Appointment, appointment_id)
         for key in list(request.json.keys()):
             setattr(appointment, key, gb.required_value_converter(appointment, key))
@@ -75,10 +94,11 @@ def update_appointment(appointment_id):
         return {'error': 'You are not authorized to update the information.'}, 401
 
 
+# create a new appointment
 @appointments_bp.route('/book/', methods=['POST'])
 @jwt_required()
 def appointment_register():
-    # create one record in the appointments table 
+    # add one record in the appointments table 
     appointment = Appointment(
         date = request.json['date'],
         time = request.json['time'],

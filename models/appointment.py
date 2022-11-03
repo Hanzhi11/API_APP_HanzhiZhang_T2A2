@@ -8,7 +8,6 @@ from marshmallow import fields
 # This table has a relationship with the veterinarians table and the patients table, respectively.
 # As one veterinarian cannot have an appointment at the same time on the same date, the combination of date, time and veterinarian_id must be unique.
 # As one patient cannot have an appointment at the same time on the same date, the combination of date, time and patient_id must be unique as well.
-
 class Appointment(db.Model):
     __tablename__ = 'appointments'
 
