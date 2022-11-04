@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 import gb
 from models.patient import PatientSchema, Patient
-from models.customer import CustomerSchema, Customer
+from models.customer import Customer
 from models.veterinarian import Veterinarian
 from models.appointment import Appointment
 from init import db, jwt
