@@ -37,4 +37,4 @@ class AppointmentSchema(ma.Schema):
     veterinarian = fields.Nested('VeterinarianSchema', only=['first_name', 'last_name', 'email'])
 
     class Meta:
-        fields = ['id', 'date', 'time', 'veterinarian_id', 'veterinarian', 'patient', 'patient_id']
+        fields = ['id', 'date', 'time', 'veterinarian_id', 'veterinarian', 'patient', 'patient_id', 'patient.name']

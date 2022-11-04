@@ -70,6 +70,13 @@ def seed_db():
             sex = 'Female'
         ),
         Veterinarian(
+            first_name = 'Gigi',
+            last_name = 'Sky',
+            email = 'gigisky@vet.com',
+            password = bcrypt.generate_password_hash('gigis11!').decode('utf-8'),
+            sex = 'Male'
+        ),
+        Veterinarian(
             first_name = 'Lucy',
             last_name = 'Land',
             email = 'luckland@vet.com',
@@ -136,6 +143,12 @@ def seed_db():
             time = '10:45',
             veterinarian_id = 1,
             patient_id = 4,
+        ),
+        Appointment(
+            date = '2022-11-2',
+            time = '10:00',
+            veterinarian_id = 4,
+            patient_id = 1,
         ),
         Appointment(
             date = '2022-11-3',

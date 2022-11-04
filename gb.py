@@ -3,7 +3,7 @@ import re
 from sqlalchemy.exc import NoResultFound
 from flask import request
 from types import NoneType
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, get_jwt
 from models.veterinarian import Veterinarian
 
 # get all records from the given table in the database
@@ -61,19 +61,31 @@ def required_value_converter(self, key):
         else:
             return value
 
+# # get customer id from the token
+# def get_customer_id():
+#     identity = get_jwt_identity()
+#     if 'V' in identity:
+#         return False
+#     return int(identity[1:])
+
 # get customer id from the token
 def get_customer_id():
-    identity = get_jwt_identity()
-    if 'V' in identity:
+    if get_jwt()['role'] == 'veterinarian':
         return False
-    return int(identity[1:])
+    return int(get_jwt_identity())
 
-# get veterinarian id from the token
+# # get veterinarian id from the token
+# def get_veterinarian_id():
+#     identity = get_jwt_identity()
+#     if 'C' in identity:
+#         return False
+#     return int(identity[1:])
+
+# # get veterinarian id from the token
 def get_veterinarian_id():
-    identity = get_jwt_identity()
-    if 'C' in identity:
+    if get_jwt()['role'] == 'customer':
         return False
-    return int(identity[1:])
+    return int(get_jwt_identity())
 
 # check if the person is an administrator according to the identity contained in the token
 def is_admin():

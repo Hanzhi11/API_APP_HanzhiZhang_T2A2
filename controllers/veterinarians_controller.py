@@ -1,10 +1,11 @@
 from types import NoneType
 from flask import Blueprint, request
-from init import db, bcrypt
-from flask_jwt_extended import jwt_required, create_access_token
+from init import db, bcrypt, jwt
+from flask_jwt_extended import jwt_required, create_access_token, current_user, get_jwt
 from models.veterinarian import VeterinarianSchema, Veterinarian
+from models.token_block_list import TokenBlocklist
 import gb
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 
 veterinarians_bp = Blueprint('veterinarians', __name__, url_prefix='/veterinarians')
@@ -19,9 +20,7 @@ def is_authorized_veterinarian(veterinarian_id):
 
 # if the value is an empty string, convert it to null
 def if_empty_convert_to_null(value):
-    if len(value) == 0:
-        return None
-    else:
+    if len(value) != 0:
         return value
 
 
@@ -34,16 +33,30 @@ def nullable_value_converter(self, key):
         return if_empty_convert_to_null(value)
 
 
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload):
+    jti = jwt_payload["jti"]
+    stmt = db.select(TokenBlocklist).filter_by(jti=jti)
+    token = db.session.scalar(stmt)
+    return token is not None
+
+
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    identity = jwt_data["sub"]
+    return Veterinarian.query.filter_by(id=identity).one_or_none()
+
+
 # read all veterinarians and return the public information only
-@veterinarians_bp.route('/')
+@veterinarians_bp.route('/public')
 def get_all_veterinarians():
     # get all records from the veterinarians table in the database
     veterinarians = gb.filter_all_records(Veterinarian)
-    return VeterinarianSchema(many=True, only=['first_name', 'last_name', 'description', 'email', 'sex', 'languages']).dump(veterinarians)
+    return VeterinarianSchema(many=True, only=['id', 'first_name', 'last_name', 'description', 'email', 'sex', 'languages']).dump(veterinarians)
 
 
 # read all veterinarians and return all information, except password
-@veterinarians_bp.route('/full_details/')
+@veterinarians_bp.route('/')
 @jwt_required()
 def get_all_veterinarians_full_details():
     if gb.is_admin():
@@ -55,7 +68,7 @@ def get_all_veterinarians_full_details():
 
 
 # read one veterinarian and return the public information only
-@veterinarians_bp.route('/<int:veterinarian_id>/')
+@veterinarians_bp.route('/<int:veterinarian_id>/public')
 def get_one_veterinarian(veterinarian_id):
     # get one record from the veterinarians table in the database with the given veterinarian id
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
@@ -63,8 +76,15 @@ def get_one_veterinarian(veterinarian_id):
     return VeterinarianSchema(only=['first_name', 'last_name', 'description', 'email', 'sex', 'languages']).dump(veterinarian)
 
 
+# read current veterinarian's profile
+@veterinarians_bp.route('/my_profile/')
+@jwt_required()
+def my_profile():
+    return VeterinarianSchema(exclude=['password']).dump(current_user)
+
+
 # read one veterinarian and return all information, except password
-@veterinarians_bp.route('/<int:veterinarian_id>/full_details/')
+@veterinarians_bp.route('/<int:veterinarian_id>/')
 @jwt_required()
 def get_one_veterinarian_full_details(veterinarian_id):
     if gb.is_admin() or is_authorized_veterinarian(veterinarian_id):
@@ -136,8 +156,21 @@ def veterinarian_login():
     # get one record from the veterinarians table in the database with the given email
     veterinarian = gb.filter_one_record_by_email(Veterinarian, email)
     if veterinarian and bcrypt.check_password_hash(veterinarian.password, password):
-        identity = ''.join(['V', str(veterinarian.id)])
-        token = create_access_token(identity=identity, expires_delta=timedelta(days=1))
+        # identity = ''.join(['V', str(veterinarian.id)])
+        identity = str(veterinarian.id)
+        additional_claims = {'role': 'veterinarian'}
+        token = create_access_token(identity=identity, expires_delta=timedelta(days=1), additional_claims=additional_claims)
         return {'email': veterinarian.email, 'token': token}
     else:
         return {'error': 'Invalid email or passord'}, 401
+
+
+# JWT revoking
+@veterinarians_bp.route("/logout", methods=["DELETE"])
+@jwt_required()
+def revoke_token():
+    jti = get_jwt()["jti"]
+    now = datetime.now()
+    db.session.add(TokenBlocklist(jti=jti, created_at=now))
+    db.session.commit()
+    return {'msg': 'You logged out successfully'}

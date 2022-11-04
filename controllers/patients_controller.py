@@ -38,7 +38,7 @@ def get_all_patients():
         return PatientSchema(many=True).dump(patients)
     else:
         return {'error': 'You are not an administrator.'}, 401
-
+        
 
 # read one patient
 @patients_bp.route('/<int:patient_id>/')
