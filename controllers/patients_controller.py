@@ -1,9 +1,11 @@
 from flask import Blueprint, request
 import gb
 from models.patient import PatientSchema, Patient
+from models.customer import CustomerSchema, Customer
+from models.veterinarian import Veterinarian
 from models.appointment import Appointment
-from init import db
-from flask_jwt_extended import jwt_required
+from init import db, jwt
+from flask_jwt_extended import jwt_required, current_user, get_jwt
 
 
 patients_bp = Blueprint('patients', __name__, url_prefix='/patients')
@@ -27,6 +29,15 @@ def is_patient_authorized_person(patient_id):
             return True
 
 
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data):
+    identity = jwt_data['sub']
+    if jwt_data['role'] == 'veterinarian':
+        return Veterinarian.query.filter_by(id=identity).one_or_none()
+    else:
+        return Customer.query.filter_by(id=identity).one_or_none()
+
+
 # read all patients
 @patients_bp.route('/')
 @jwt_required()
@@ -38,7 +49,7 @@ def get_all_patients():
         return PatientSchema(many=True).dump(patients)
     else:
         return {'error': 'You are not an administrator.'}, 401
-        
+
 
 # read one patient
 @patients_bp.route('/<int:patient_id>/')
@@ -50,6 +61,19 @@ def get_one_patient(patient_id):
         return PatientSchema().dump(patient)
     else:
         return {'error': 'You are not authorized to view the information.'}, 401
+
+
+# read current user's patients
+@patients_bp.route('/my_patients/')
+@jwt_required()
+def my_patients():
+    if get_jwt()['role'] == 'veterinarian':
+        veterinarian_id = current_user.id
+        stmt = db.select(Patient). join(Appointment, Patient.id==Appointment.patient_id).filter_by(veterinarian_id=veterinarian_id)
+        result = db.session.scalars(stmt)
+        return PatientSchema(many=True).dump(result)
+    else:
+        return PatientSchema(many=True, exclude=['customer', 'customer_id']).dump(current_user.patients)
 
 
 # delete one patient

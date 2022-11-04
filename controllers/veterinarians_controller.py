@@ -85,7 +85,10 @@ def get_one_veterinarian(veterinarian_id):
 @veterinarians_bp.route('/my_profile/')
 @jwt_required()
 def my_profile():
-    return VeterinarianSchema(exclude=['password']).dump(current_user)
+    if get_jwt()['role'] == 'veterinarian':
+        return VeterinarianSchema(exclude=['password']).dump(current_user)
+    else:
+        return {'error': 'You are not a veterinarian'}, 401
 
 
 # read one veterinarian and return all information, except password

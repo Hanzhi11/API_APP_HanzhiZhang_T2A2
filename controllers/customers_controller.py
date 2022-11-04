@@ -21,7 +21,13 @@ def is_authorized_veterinarians(customer_id):
         stmt = db.select(Appointment).filter_by(veterinarian_id=id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id) 
         result = db.session.scalar(stmt)
         if result:
-            return True
+            return True            
+
+# check if the customer who has logged in has been authorized 
+def is_authorized_customer(customer_id):
+    id = gb.get_customer_id()
+    if id == customer_id:
+        return True
 
 
 @jwt.token_in_blocklist_loader
@@ -31,18 +37,9 @@ def check_if_token_revoked(jwt_header, jwt_payload):
     token = db.session.scalar(stmt)
     return token is not None
 
-
 @jwt.revoked_token_loader
 def revoked_token(jwt_header, jwt_payload):
     return {'error': "You haven't logged into the app yet."}, 401
-
-
-# check if the customer who has logged in has been authorized 
-def is_authorized_customer(customer_id):
-    id = gb.get_customer_id()
-    if id == customer_id:
-        return True
-
 
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
@@ -66,14 +63,10 @@ def get_all_customers():
 @customers_bp.route('/my_profile/')
 @jwt_required()
 def my_profile():
-    return CustomerSchema(only=['id', 'first_name', 'last_name', 'contact_number', 'email']).dump(current_user)
-
-
-# read current customer's registered pets (patients)
-@customers_bp.route('/my_pets/')
-@jwt_required()
-def my_pets():
-    return CustomerSchema(only=['patients']).dump(current_user)
+    if get_jwt()['role'] == 'customer':
+        return CustomerSchema(only=['id', 'first_name', 'last_name', 'contact_number', 'email']).dump(current_user)
+    else:
+        return {'error': 'You are not an customer'}, 401
 
 
 # read one customer
