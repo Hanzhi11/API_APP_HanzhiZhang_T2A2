@@ -61,12 +61,6 @@ def required_value_converter(self, key):
         else:
             return value
 
-# # get customer id from the token
-# def get_customer_id():
-#     identity = get_jwt_identity()
-#     if 'V' in identity:
-#         return False
-#     return int(identity[1:])
 
 # get customer id from the token
 def get_customer_id():
@@ -74,12 +68,6 @@ def get_customer_id():
         return False
     return int(get_jwt_identity())
 
-# # get veterinarian id from the token
-# def get_veterinarian_id():
-#     identity = get_jwt_identity()
-#     if 'C' in identity:
-#         return False
-#     return int(identity[1:])
 
 # # get veterinarian id from the token
 def get_veterinarian_id():

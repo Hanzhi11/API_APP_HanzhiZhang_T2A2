@@ -11,13 +11,6 @@ from datetime import timedelta, datetime
 
 customers_bp = Blueprint('customers', __name__, url_prefix='/customers')
 
-@jwt.token_in_blocklist_loader
-def check_if_token_revoked(jwt_header, jwt_payload):
-    jti = jwt_payload["jti"]
-    stmt = db.select(TokenBlocklist).filter_by(jti=jti)
-    token = db.session.scalar(stmt)
-    return token is not None
-
 
 # check if the veterinarian who has logged in has been authorized 
 def is_authorized_veterinarians(customer_id):
@@ -31,6 +24,19 @@ def is_authorized_veterinarians(customer_id):
             return True
 
 
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload):
+    jti = jwt_payload["jti"]
+    stmt = db.select(TokenBlocklist).filter_by(jti=jti)
+    token = db.session.scalar(stmt)
+    return token is not None
+
+
+@jwt.revoked_token_loader
+def revoked_token(jwt_header, jwt_payload):
+    return {'error': "You haven't logged into the app yet."}, 401
+
+
 # check if the customer who has logged in has been authorized 
 def is_authorized_customer(customer_id):
     id = gb.get_customer_id()
@@ -40,7 +46,7 @@ def is_authorized_customer(customer_id):
 
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
-    identity = jwt_data["sub"]
+    identity = jwt_data['sub']
     return Customer.query.filter_by(id=identity).one_or_none()
 
 

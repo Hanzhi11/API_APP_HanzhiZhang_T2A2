@@ -41,6 +41,11 @@ def check_if_token_revoked(jwt_header, jwt_payload):
     return token is not None
 
 
+@jwt.revoked_token_loader
+def revoked_token(jwt_header, jwt_payload):
+    return {'error': "You haven't logged into the app yet."}, 401
+
+
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
     identity = jwt_data["sub"]
