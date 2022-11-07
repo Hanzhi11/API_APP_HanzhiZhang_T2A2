@@ -37,7 +37,7 @@ class Veterinarian(db.Model):
 
     @validates('last_name', 'first_name')
     def validate_last_name(self, key, value):
-        if len(value) == 0:
+        if not value:
             raise ValueError(f'Invalid {key}')
         return value
 
@@ -50,14 +50,14 @@ class Veterinarian(db.Model):
     @validates('is_admin')
     def validate_is_admin(self, key, value):
         if not isinstance(value, bool):
-            raise ValueError(f'The value must be True or False for {key}')
+            raise TypeError(f'The value must be True or False for {key}')
         return value
     
 
 class VeterinarianSchema(ma.Schema):
-    appointments = fields.List(fields.Nested('AppointmentSchema', only=['date', 'time', 'patient_id', 'patient']))
+    appointments = fields.List(fields.Nested('AppointmentSchema', only=['date', 'time', 'patient_id']))
     sex = EnumField(SexEnum)
     languages = fields.List(EnumField(LanguagesEnum))
 
     class Meta:
-        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'description', 'sex', 'languages', 'is_admin', 'appointments')
+        fields = ('id', 'first_name', 'last_name', 'email', 'description', 'sex', 'languages', 'is_admin', 'appointments')

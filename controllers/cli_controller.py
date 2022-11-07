@@ -6,7 +6,9 @@ from models.patient import Patient
 from models.appointment import Appointment
 from datetime import datetime
 
+
 db_commands = Blueprint('db', __name__)
+
 
 # create all defined tables in the database
 @db_commands.cli.command('create')
@@ -14,11 +16,13 @@ def create_db():
     db.create_all()
     print('Tables created')
 
+
 # drop all tables in the database
 @db_commands.cli.command('drop')
 def drop_db():
     db.drop_all()
     print('Tables droped')
+
 
 # seed all tables (i.e. customers, patients, appointments, veterinarians) in the database
 @db_commands.cli.command('seed')
@@ -46,10 +50,8 @@ def seed_db():
             contact_number = '0733441234'
         )
     ]
-
     db.session.add_all(customers)
     db.session.commit()
-
     veterinarians = [
         Veterinarian(
             first_name = 'Sam',
@@ -84,10 +86,8 @@ def seed_db():
             sex = 'Female'
         )
     ]
-
     db.session.add_all(veterinarians)
     db.session.commit()
-
     patients = [
         Patient(
             name = 'Lily',
@@ -124,7 +124,6 @@ def seed_db():
     ]
     db.session.add_all(patients)
     db.session.commit()
-
     appointments = [
         Appointment(
             date = '2022-11-3',
@@ -159,5 +158,4 @@ def seed_db():
     ]
     db.session.add_all(appointments)
     db.session.commit()
-
     print('Tables seeded')

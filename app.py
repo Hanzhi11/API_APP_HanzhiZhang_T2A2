@@ -33,11 +33,15 @@ def create_app():
     def value_error(err):
         return {'error': str(err)}, 403
 
+    @app.errorhandler(TypeError)
+    def type_error(err):
+        return {'error': str(err)}, 403
+
     @app.errorhandler(IntegrityError)
     def integrity_error(err):
         if 'UniqueViolation' in err.args[0]:
             if 'appointment' in err.args[0]:
-                return {'error': 'Appointment for the same date and time exists already'}, 409
+                return {'error': 'Appointment is not available for the required date and time'}, 409
             elif 'email' in err.args[0]:
                 return {'error': 'Email exists already'}, 409
             elif 'patient' in err.args[0]:

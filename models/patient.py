@@ -28,7 +28,7 @@ class Patient(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(25), nullable=False)
     age = db.Column(db.Integer, nullable=False)
-    weight = db.Column(db.Numeric(5, 2), nullable=False)
+    weight = db.Column(db.Numeric(4, 2), nullable=False)
     sex = db.Column(db.Enum(SexEnum), nullable=False)
     species = db.Column(db.Enum(SpeciesEnum), nullable=False)
 
@@ -41,7 +41,7 @@ class Patient(db.Model):
 
     @validates('name')
     def validate_name(self, key, value):
-        if len(value) == 0:
+        if not value:
             raise ValueError(f'Invalid {key}')
         return value
 
@@ -51,6 +51,22 @@ class Patient(db.Model):
             raise ValueError('Invalid sex. Sex must be Male or Female.')
         return value
 
+    @validates('age')
+    def validate_age(self, key, value):
+        if not isinstance(value, int):
+            raise TypeError('Age must be an integer.')
+        elif value < 0:
+            raise ValueError('Age must be greater than 0.')
+        return value
+
+    @validates('weight')
+    def validate_weight(self, key, value):
+        print(type(value))
+        if not isinstance(value, float) and not isinstance(value, int):
+            raise TypeError('Weight must be a number.')
+        elif value < 0.01 or value > 99.99:
+            raise ValueError('Weight should be between 0.01 and 99.99.')
+        return value
 
 class PatientSchema(ma.Schema):
     customer = fields.Nested('CustomerSchema', only=['first_name', 'last_name', 'email', 'contact_number'])

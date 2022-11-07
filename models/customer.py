@@ -43,6 +43,6 @@ class CustomerSchema(ma.Schema):
     patients = fields.List(fields.Nested('PatientSchema', only=['name', 'age', 'weight', 'sex', 'species', 'appointments']))
 
     class Meta:
-        fields = ('id', 'first_name', 'last_name', 'email', 'password', 'contact_number', 'patients')
+        fields = ('id', 'first_name', 'last_name', 'email', 'contact_number', 'patients')
 
     

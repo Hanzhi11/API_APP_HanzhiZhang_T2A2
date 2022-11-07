@@ -55,9 +55,9 @@ def get_all_patients():
 @patients_bp.route('/<int:patient_id>/')
 @jwt_required()
 def get_one_patient(patient_id):
+    patient = gb.required_record(Patient, patient_id)
     if gb.is_admin() or is_patient_authorized_person(patient_id):
         # get one record from the patients table in the database with the given patient id
-        patient = gb.required_record(Patient, patient_id)
         return PatientSchema().dump(patient)
     else:
         return {'error': 'You are not authorized to view the information.'}, 401
@@ -80,9 +80,9 @@ def my_patients():
 @patients_bp.route('/<int:patient_id>/', methods=['DELETE'])
 @jwt_required()
 def delete_patient(patient_id):
+    patient = gb.required_record(Patient, patient_id)
     if gb.is_admin():
         # delete one record from the patients table in the database with the given patient id
-        patient = gb.required_record(Patient, patient_id)
         db.session.delete(patient)
         db.session.commit()
         return {'msg': f'Patient {patient.name} deleted successfully'}
@@ -94,9 +94,9 @@ def delete_patient(patient_id):
 @patients_bp.route('/<int:patient_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_patient(patient_id):
+    patient = gb.required_record(Patient, patient_id)
     if gb.is_admin() or is_patient_authorized_person(patient_id):
         # update one record in the patients table in the database with the given patient id using the information contained in the request
-        patient = gb.required_record(Patient, patient_id)
         for key in list(request.json.keys()-['patient']):
             setattr(patient, key, gb.required_value_converter(patient, key))
         db.session.commit()

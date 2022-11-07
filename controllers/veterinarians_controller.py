@@ -20,7 +20,7 @@ def is_authorized_veterinarian(veterinarian_id):
 
 # if the value is an empty string, convert it to null
 def if_empty_convert_to_null(value):
-    if len(value) != 0:
+    if value:
         return value
 
 
@@ -67,7 +67,7 @@ def get_all_veterinarians_full_details():
     if gb.is_admin():
         # get all records from the veterinarians table in the database
         veterinarians = gb.filter_all_records(Veterinarian)
-        return VeterinarianSchema(many=True, exclude=['password']).dump(veterinarians)
+        return VeterinarianSchema(many=True).dump(veterinarians)
     else:
         return {'error': 'You are not an administrator.'}, 401
 
@@ -77,7 +77,6 @@ def get_all_veterinarians_full_details():
 def get_one_veterinarian(veterinarian_id):
     # get one record from the veterinarians table in the database with the given veterinarian id
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
-    print(veterinarian)
     return VeterinarianSchema(only=['first_name', 'last_name', 'description', 'email', 'sex', 'languages']).dump(veterinarian)
 
 
@@ -86,7 +85,7 @@ def get_one_veterinarian(veterinarian_id):
 @jwt_required()
 def my_profile():
     if get_jwt()['role'] == 'veterinarian':
-        return VeterinarianSchema(exclude=['password']).dump(current_user)
+        return VeterinarianSchema(exclude=['appointments']).dump(current_user)
     else:
         return {'error': 'You are not a veterinarian'}, 401
 
@@ -95,10 +94,10 @@ def my_profile():
 @veterinarians_bp.route('/<int:veterinarian_id>/')
 @jwt_required()
 def get_one_veterinarian_full_details(veterinarian_id):
+    # get one record from the veterinarians table in the database with the given veterinarian id
+    veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     if gb.is_admin() or is_authorized_veterinarian(veterinarian_id):
-        # get one record from the veterinarians table in the database with the given veterinarian id
-        veterinarian = gb.required_record(Veterinarian, veterinarian_id)
-        return VeterinarianSchema(exclude=['password']).dump(veterinarian)
+        return VeterinarianSchema().dump(veterinarian)
     else:
         return {'error': 'You are not authorized to view the information.'}, 401
 
@@ -107,9 +106,9 @@ def get_one_veterinarian_full_details(veterinarian_id):
 @veterinarians_bp.route('/<int:veterinarian_id>/', methods=['DELETE'])
 @jwt_required()
 def delete_veterinarian(veterinarian_id):
+    veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     if gb.is_admin():
         # delete one record from the veterinarians table in the database with the given veterinarian id
-        veterinarian = gb.required_record(Veterinarian, veterinarian_id)
         db.session.delete(veterinarian)
         db.session.commit()
         return {'msg': f'Veterinarian {veterinarian.first_name} {veterinarian.last_name} deleted successfully'}
@@ -121,16 +120,16 @@ def delete_veterinarian(veterinarian_id):
 @veterinarians_bp.route('/<int:veterinarian_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_veterinarian(veterinarian_id):
+    veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     if gb.is_admin() or is_authorized_veterinarian(veterinarian_id):
         # update one record in the veterinarians table in the database with the given veterinarian id using the information contained in the request
-        veterinarian = gb.required_record(Veterinarian, veterinarian_id)
         for key in list(request.json.keys()):
             if key in ['languages', 'description']:
                 setattr(veterinarian, key, nullable_value_converter(veterinarian, key))
             else:
                 setattr(veterinarian, key, gb.required_value_converter(veterinarian, key))
         db.session.commit()
-        return VeterinarianSchema(exclude=['password']).dump(veterinarian)
+        return VeterinarianSchema(exclude=['appointments']).dump(veterinarian)
     else:
         return {'error': 'You are not authorized to update the information.'}, 401
 
@@ -138,8 +137,11 @@ def update_veterinarian(veterinarian_id):
 # create a new veterinarian
 @veterinarians_bp.route('/register/', methods=['POST'])
 def veterinarian_register():
-    password_input = request.json.get('password')
+    password_input = request.json['password']
     gb.validate_password(password_input)
+    is_admin_input = request.json.get('is_admin')
+    if not is_admin_input:
+        is_admin_input = False
     # add a new record to the veterinarians table in the database
     veterinarian = Veterinarian(
         first_name = request.json['first_name'],
@@ -148,12 +150,12 @@ def veterinarian_register():
         password = bcrypt.generate_password_hash(password_input).decode('utf-8'),
         sex = request.json['sex'],
         languages = if_empty_convert_to_null(request.json.get('languages')),
-        is_admin = request.json['is_admin'],
+        is_admin = is_admin_input,
         description = if_empty_convert_to_null(request.json.get('description'))
     )
     db.session.add(veterinarian)
     db.session.commit()
-    return VeterinarianSchema(exclude=['password']).dump(veterinarian), 201
+    return VeterinarianSchema().dump(veterinarian), 201
 
 
 # veterinarian authentication

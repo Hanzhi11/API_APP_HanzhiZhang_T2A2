@@ -18,14 +18,15 @@ def is_appointment_authorized_person(appointment_id):
     veterinarian_id = gb.get_veterinarian_id()
     if customer_id:
         # Through the relationships among the appointments, patients and customers tables, get one record from the appointments table using the given appointment_id and the customer_id obtained from the token
-        stmt = db.select(Appointment).filter_by(appointment_id=id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id)
+        stmt = db.select(Appointment).filter_by(id=appointment_id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id)
         result = db.session.scalar(stmt)
         if result:
             return True
     elif veterinarian_id:
         # In the appointments table, get one record with the given appointment_id and the veterinarian_id obtained from the token
-        stmt = db.select(Appointment).filter_by(veterinarian_id=veterinarian_id, appointment_id=appointment_id)
+        stmt = db.select(Appointment).filter_by(veterinarian_id=veterinarian_id, id=appointment_id)
         result = db.session.scalar(stmt)
+        print(result)
         if result:
             return True
 
@@ -62,7 +63,7 @@ def get_all_appointments():
 @jwt_required()
 def get_my_appointments():
     if get_jwt()['role'] == 'veterinarian':
-        return AppointmentSchema(many=True, exclude=['patient.name']).dump(current_user.appointments)
+        return AppointmentSchema(many=True, exclude=['veterinarian', 'veterinarian_id']).dump(current_user.appointments)
     else:
         # get all records from the appointments table which is associated with the current customer id through the patients table
         customer_id = current_user.id
@@ -80,7 +81,7 @@ def get_future_appointments():
         # get all records from the appointments table which date is later than today's date and with the current veterinarian
         future_appointments = [appointment for appointment in current_user.appointments if appointment.date > datetime.today().date()]
         if future_appointments:
-            return AppointmentSchema(many=True).dump(future_appointments)
+            return AppointmentSchema(many=True, exclude=['veterinarian', 'veterinarian_id']).dump(future_appointments)
         else:
             return {'msg': 'No appointments found'}, 404
     else:
@@ -103,7 +104,7 @@ def get_previous_appointments():
         previous_appointments = [appointment for appointment in current_user.appointments if appointment.date < datetime.today().date()]
         # future_appointments = current_user.appointments.filter(Appointment.date < datetime.today())
         if previous_appointments:
-            return AppointmentSchema(many=True).dump(previous_appointments)
+            return AppointmentSchema(many=True, exclude=['veterinarian', 'veterinarian_id']).dump(previous_appointments)
         else:
             return {'msg': 'No appointments found'}, 404
     else:
@@ -125,7 +126,7 @@ def get_today_appointments():
         # get all records from the appointments table which date is today's date and with the current veterinarian
         today_appointments = [appointment for appointment in current_user.appointments if appointment.date == datetime.today().date()]
         if today_appointments:
-            return AppointmentSchema(many=True).dump(today_appointments)
+            return AppointmentSchema(many=True, exclude=['veterinarian', 'veterinarian_id']).dump(today_appointments)
         else:
             return {'msg': 'No appointments found'}, 404
     else:
@@ -143,9 +144,9 @@ def get_today_appointments():
 @appointments_bp.route('/<int:appointment_id>/')
 @jwt_required()
 def get_one_appointment(appointment_id):
+    appointment = gb.required_record(Appointment, appointment_id)
     if gb.is_admin() or is_appointment_authorized_person(appointment_id):
         # get one record from the appointments table with the given appointment_id
-        appointment = gb.required_record(Appointment, appointment_id)
         return AppointmentSchema().dump(appointment)
     else:
        return {'error': 'You are not authorized to view the information.'}, 401
@@ -155,9 +156,9 @@ def get_one_appointment(appointment_id):
 @appointments_bp.route('/<int:appointment_id>/', methods=['DELETE'])
 @jwt_required()
 def delete_appointment(appointment_id):
+    appointment = gb.required_record(Appointment, appointment_id)
     if gb.is_admin():
         # delete one record from the appointments table with the given appointment_id
-        appointment = gb.required_record(Appointment, appointment_id)
         db.session.delete(appointment)
         db.session.commit()
         return {'msg': f'Appointment at {appointment.time} on {appointment.date} deleted successfully for patient {appointment.patient_id}'}
@@ -169,13 +170,13 @@ def delete_appointment(appointment_id):
 @appointments_bp.route('/<int:appointment_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_appointment(appointment_id):
+    appointment = gb.required_record(Appointment, appointment_id)
     if gb.is_admin() or is_appointment_authorized_person(appointment_id):
         # update one record in the appointments table with the given appointment_id using the information contained in the request
-        appointment = gb.required_record(Appointment, appointment_id)
         for key in list(request.json.keys()):
             setattr(appointment, key, gb.required_value_converter(appointment, key))
         db.session.commit()
-        return AppointmentSchema().dump(appointment)
+        return AppointmentSchema(exclude=['patient']).dump(appointment)
     else:
         return {'error': 'You are not authorized to update the information.'}, 401
 
@@ -184,13 +185,35 @@ def update_appointment(appointment_id):
 @appointments_bp.route('/book/', methods=['POST'])
 @jwt_required()
 def appointment_register():
+    date_input = request.json['date']
+    date_datetime = datetime.strptime(date_input, '%Y-%m-%d').date()
+    today = datetime.today().date()
+    if date_datetime < today:
+        return {'error': 'Invalid date.'}, 403
+    elif date_datetime == today:
+        return {'error': 'Booking has to be made one day in advance.'}, 403
+    # check if the required patient or veterinarian exists in the database already
+    patient_id_input = request.json['patient_id']
+    gb.required_record(Patient, patient_id_input)
+    veterinarian_id_input = request.json['veterinarian_id']
+    gb.required_record(Veterinarian, veterinarian_id_input)
+    if get_jwt()['role'] == 'customer':
+        customer_id = current_user.id
+        # get patients' id from the patients table using the current customer's id
+        stmt = db.select(Patient.id).filter_by(customer_id=customer_id)
+        result = db.session.scalars(stmt)
+        if patient_id_input not in result:
+            return {'error': 'You are not authorized to book an appointment for this patient.'}, 401
+    elif get_jwt()['role'] == 'veterinarian' and not current_user.is_admin:
+        if veterinarian_id_input != current_user.id:
+            return {'error': 'You are not authorized to book an appointment for this veterinarian.'}, 401
     # add one record in the appointments table 
     appointment = Appointment(
-        date = request.json['date'],
+        date = date_input,
         time = request.json['time'],
-        veterinarian_id = request.json['veterinarian_id'],
-        patient_id = request.json['patient_id']
+        veterinarian_id = veterinarian_id_input,
+        patient_id = patient_id_input
     )
     db.session.add(appointment)
     db.session.commit()
-    return AppointmentSchema().dump(appointment), 201
+    return AppointmentSchema(exclude=['patient']).dump(appointment), 201

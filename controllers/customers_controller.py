@@ -21,7 +21,8 @@ def is_authorized_veterinarians(customer_id):
         stmt = db.select(Appointment).filter_by(veterinarian_id=id).join(Patient, Patient.id==Appointment.patient_id).filter_by(customer_id=customer_id) 
         result = db.session.scalar(stmt)
         if result:
-            return True            
+            return True         
+
 
 # check if the customer who has logged in has been authorized 
 def is_authorized_customer(customer_id):
@@ -37,9 +38,11 @@ def check_if_token_revoked(jwt_header, jwt_payload):
     token = db.session.scalar(stmt)
     return token is not None
 
+
 @jwt.revoked_token_loader
 def revoked_token(jwt_header, jwt_payload):
     return {'error': "You haven't logged into the app yet."}, 401
+    
 
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data):
@@ -54,7 +57,7 @@ def get_all_customers():
     if gb.is_admin():
         # get all records from the customers table in the database
         customers = gb.filter_all_records(Customer)
-        return CustomerSchema(many=True, exclude=['password']).dump(customers)
+        return CustomerSchema(many=True).dump(customers)
     else:
         return {'error': 'You are not an administrator.'}, 401
 
@@ -73,10 +76,10 @@ def my_profile():
 @customers_bp.route('/<int:customer_id>/')
 @jwt_required()
 def get_one_customer(customer_id):
+    customer = gb.required_record(Customer, customer_id)
     if gb.is_admin() or is_authorized_customer(customer_id) or is_authorized_veterinarians(customer_id):
         # get one record from the customers table in the database with the given customer id
-        customer = gb.required_record(Customer, customer_id)
-        return CustomerSchema(exclude=['password']).dump(customer)
+        return CustomerSchema().dump(customer)
     else:
         return {'error': 'You are not authorized to view the information.'}, 401
 
@@ -85,9 +88,9 @@ def get_one_customer(customer_id):
 @customers_bp.route('/<int:customer_id>/', methods=['DELETE'])
 @jwt_required()
 def delete_customer(customer_id):
+    customer = gb.required_record(Customer, customer_id)
     if gb.is_admin():
         # delete one record from the customers table in the database with the given customer id
-        customer = gb.required_record(Customer, customer_id)
         db.session.delete(customer)
         db.session.commit()
         return {'msg': f'Customer {customer.first_name} {customer.last_name} deleted successfully'}
@@ -99,13 +102,13 @@ def delete_customer(customer_id):
 @customers_bp.route('/<int:customer_id>/', methods=['PUT', 'PATCH'])
 @jwt_required()
 def update_customer(customer_id):
+    customer = gb.required_record(Customer, customer_id)
     if gb.is_admin() or is_authorized_customer(customer_id) or is_authorized_veterinarians(customer_id):
         # update one record in the customers table in the database with the given customer id using the information contained in the request
-        customer = gb.required_record(Customer, customer_id)
         for key in list(request.json.keys()):
             setattr(customer, key, gb.required_value_converter(customer, key))
         db.session.commit()
-        return CustomerSchema(exclude=['password']).dump(customer)
+        return CustomerSchema().dump(customer)
     else:
         return {'error': 'You are not authorized to update the information.'}, 401
 
@@ -113,7 +116,7 @@ def update_customer(customer_id):
 # create a new customer
 @customers_bp.route('/register/', methods=['POST'])
 def customer_register():
-    password_input = request.json.get('password')
+    password_input = request.json['password']
     gb.validate_password(password_input)
     # add a new record in the customers table in the database
     customer = Customer(
@@ -125,7 +128,7 @@ def customer_register():
     )
     db.session.add(customer)
     db.session.commit()
-    return CustomerSchema(exclude=['password']).dump(customer), 201
+    return CustomerSchema().dump(customer), 201
 
 
 # customer authentication
