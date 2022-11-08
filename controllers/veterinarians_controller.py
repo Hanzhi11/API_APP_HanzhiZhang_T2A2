@@ -204,8 +204,3 @@ def revoke_token():
     db.session.add(TokenBlocklist(jti=jti, created_at=now))
     db.session.commit()
     return {'msg': 'You logged out successfully'}
-
-
-@veterinarians_bp.route('/documentation')
-def documentation():
-    return auto.html()

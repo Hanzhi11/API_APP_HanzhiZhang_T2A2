@@ -26,7 +26,6 @@ def is_appointment_authorized_person(appointment_id):
         # In the appointments table, get one record with the given appointment_id and the veterinarian_id obtained from the token
         stmt = db.select(Appointment).filter_by(veterinarian_id=veterinarian_id, id=appointment_id)
         result = db.session.scalar(stmt)
-        print(result)
         if result:
             return True
 
@@ -76,7 +75,6 @@ def get_my_appointments():
 @appointments_bp.route('/my_appointments/future/')
 @jwt_required()
 def get_future_appointments():
-    print(get_jwt()['role'])
     if get_jwt()['role'] == 'veterinarian':
         # get all records from the appointments table which date is later than today's date and with the current veterinarian
         future_appointments = [appointment for appointment in current_user.appointments if appointment.date > datetime.today().date()]

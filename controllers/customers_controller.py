@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from init import db, bcrypt, jwt
+from init import db, bcrypt, jwt, auto
 from flask_jwt_extended import jwt_required, create_access_token, current_user, get_jwt
 from models.customer import CustomerSchema, Customer
 from models.appointment import Appointment
@@ -52,8 +52,10 @@ def user_lookup_callback(_jwt_header, jwt_data):
 
 # read all customers
 @customers_bp.route('/')
+@auto.doc()
 @jwt_required()
 def get_all_customers():
+    '''Admin interface - Return the full details of all customers'''
     if gb.is_admin():
         # get all records from the customers table in the database
         customers = gb.filter_all_records(Customer)
@@ -64,8 +66,10 @@ def get_all_customers():
 
 # read current customer's profile
 @customers_bp.route('/my_profile/')
+@auto.doc()
 @jwt_required()
 def my_profile():
+    '''Return the profile of the current customer excluding patients'''
     if get_jwt()['role'] == 'customer':
         return CustomerSchema(only=['id', 'first_name', 'last_name', 'contact_number', 'email']).dump(current_user)
     else:
@@ -74,8 +78,10 @@ def my_profile():
 
 # read one customer
 @customers_bp.route('/<int:customer_id>/')
+@auto.doc()
 @jwt_required()
 def get_one_customer(customer_id):
+    '''Return the full details of one customer with the given id'''
     customer = gb.required_record(Customer, customer_id)
     if gb.is_admin() or is_authorized_customer(customer_id) or is_authorized_veterinarians(customer_id):
         # get one record from the customers table in the database with the given customer id
@@ -86,8 +92,10 @@ def get_one_customer(customer_id):
 
 # delete one customer
 @customers_bp.route('/<int:customer_id>/', methods=['DELETE'])
+@auto.doc()
 @jwt_required()
 def delete_customer(customer_id):
+    '''Delete one customer with the given id'''
     customer = gb.required_record(Customer, customer_id)
     if gb.is_admin():
         # delete one record from the customers table in the database with the given customer id
@@ -100,8 +108,10 @@ def delete_customer(customer_id):
 
 # update one customer's details
 @customers_bp.route('/<int:customer_id>/', methods=['PUT', 'PATCH'])
+@auto.doc()
 @jwt_required()
 def update_customer(customer_id):
+    '''Update one customer with the given id and return the updated full details of the customer'''
     customer = gb.required_record(Customer, customer_id)
     if gb.is_admin() or is_authorized_customer(customer_id) or is_authorized_veterinarians(customer_id):
         # update one record in the customers table in the database with the given customer id using the information contained in the request
@@ -115,7 +125,9 @@ def update_customer(customer_id):
 
 # create a new customer
 @customers_bp.route('/register/', methods=['POST'])
+@auto.doc()
 def customer_register():
+    '''Customer registration and return the full details of the customer registered'''
     password_input = request.json['password']
     gb.validate_password(password_input)
     # add a new record in the customers table in the database
@@ -133,7 +145,9 @@ def customer_register():
 
 # customer authentication
 @customers_bp.route('/login/', methods=['POST'])
+@auto.doc()
 def customer_login():
+    '''Customer login and return the email of and the token for the customer'''
     email=request.json['email']
     password = request.json['password']
     # get one record from the customers table in the database with the given email
@@ -150,10 +164,14 @@ def customer_login():
 
 # JWT revoking
 @customers_bp.route('/logout', methods=['DELETE'])
+@auto.doc()
 @jwt_required()
 def revoke_token():
+    '''Customer logout'''
     jti = get_jwt()["jti"]
     now = datetime.now()
     db.session.add(TokenBlocklist(jti=jti, created_at=now))
     db.session.commit()
     return {'msg': 'You logged out successfully'}
+
+

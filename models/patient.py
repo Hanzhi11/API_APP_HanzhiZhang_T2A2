@@ -61,7 +61,6 @@ class Patient(db.Model):
 
     @validates('weight')
     def validate_weight(self, key, value):
-        print(type(value))
         if not isinstance(value, float) and not isinstance(value, int):
             raise TypeError('Weight must be a number.')
         elif value < 0.01 or value > 99.99:

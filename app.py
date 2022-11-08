@@ -8,7 +8,6 @@ from controllers.patients_controller import patients_bp
 from controllers.appointments_controller import appointments_bp
 from sqlalchemy.exc import NoResultFound, DataError
 from sqlalchemy.exc import IntegrityError
-from flask_autodoc.autodoc import Autodoc
 
 
 def create_app():
@@ -93,5 +92,9 @@ def create_app():
     app.register_blueprint(veterinarians_bp)    
     app.register_blueprint(patients_bp)    
     app.register_blueprint(appointments_bp)    
+
+    @app.route('/documentation')
+    def documentation():
+        return auto.html()
 
     return app
