@@ -33,10 +33,12 @@ In this app, the body of API requests and the responses are all in the format of
   2. Create an virtual environment
   3. Active the virtual environment
   4. Install the requirements with `pip install -r requirements.txt`
-  5. Create a PostgreSQL database
-  6. Add your database URL and JWT secret key to the `.env` file
-  7. Create the tables in the database with the cli command `flask db create`. 
-  8. Run the app with `flask run`, and test the `GET /veterinarians/public` and `GET /veterinarians/1/public` endpoints on an API platform e.g. Postman which was used as an example for the following.
+  5. Change `from flask.ext.autodoc.autodoc import Autodoc` to `from flask_autodoc.autodoc import Autodoc` in the __init__.py file at flask_autodoc folder
+  6. Change `from jinja2 import evalcontextfilter` to `from jinja2 import pass_eval_context` and `@evalcontextfilter` to `@pass_eval_context` in the autodoc.py file at flask_autodoc folder
+  7. Create a PostgreSQL database
+  8. Create a .env file and add your database URL and JWT secret key to the file (i.e. DATABASE_URL = {your database URL}, JWT_SECRET_KEY = {your secret key})
+  9. Create the tables in the database with the cli command `flask db create`. 
+  10. Run the app with `flask run`, and test the `GET /documentation/` endpoint on an API platform e.g. Postman which was also used as an example for the following.
 
 If everything works fine, you can get started with the following:
 
@@ -54,9 +56,9 @@ If everything works fine, you can get started with the following:
    - Notes
       1. Password must contain at lease 8 characters, and at lease one letter, one number and one special characters.
       2. Veterinarians' email must end with '@vet.com'.
-      3. For trail purposes, you can use the cli command `flask db seed' to seed the database straight away, and then use the below information for authentication and authorization, and making API requests.
+      3. For trail purposes, you can use the cli command `flask db seed' to seed the database straight away, and then use the below information for authentication and authorization, and making API requests. Otherwise, you can seed the database by manually registering customers, patients and veterinarians, and booking appointments using appropriate API requests.
            - Customers: 'hamport@test.com' and 'Hamport1!'
-           - Veterinarians: 
+           - Veterinarians:
               1. Admin: 'samsky@vet.com' and 'Samsky1?'
               2. General: 'gigisky@vet.com' and 'gigis11!'
 
