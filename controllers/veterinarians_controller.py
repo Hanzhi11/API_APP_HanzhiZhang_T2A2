@@ -1,6 +1,6 @@
 from types import NoneType
 from flask import Blueprint, request
-from init import db, bcrypt, jwt
+from init import db, bcrypt, jwt, auto
 from flask_jwt_extended import jwt_required, create_access_token, current_user, get_jwt
 from models.veterinarian import VeterinarianSchema, Veterinarian
 from models.token_block_list import TokenBlocklist
@@ -53,8 +53,10 @@ def user_lookup_callback(_jwt_header, jwt_data):
 
 
 # read all veterinarians and return the public information only
-@veterinarians_bp.route('/public')
+@veterinarians_bp.route('/public/')
+@auto.doc()
 def get_all_veterinarians():
+    '''Return the public information of all veterinarians'''
     # get all records from the veterinarians table in the database
     veterinarians = gb.filter_all_records(Veterinarian)
     return VeterinarianSchema(many=True, only=['id', 'first_name', 'last_name', 'description', 'email', 'sex', 'languages']).dump(veterinarians)
@@ -62,8 +64,10 @@ def get_all_veterinarians():
 
 # read all veterinarians and return all information, except password
 @veterinarians_bp.route('/')
+@auto.doc()
 @jwt_required()
 def get_all_veterinarians_full_details():
+    '''Admin interface - Return the full details of all veterinarians including is_admin and appointments'''
     if gb.is_admin():
         # get all records from the veterinarians table in the database
         veterinarians = gb.filter_all_records(Veterinarian)
@@ -74,7 +78,9 @@ def get_all_veterinarians_full_details():
 
 # read one veterinarian and return the public information only
 @veterinarians_bp.route('/<int:veterinarian_id>/public')
+@auto.doc()
 def get_one_veterinarian(veterinarian_id):
+    '''Return the public information of one veterinarian with the given id'''
     # get one record from the veterinarians table in the database with the given veterinarian id
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     return VeterinarianSchema(only=['first_name', 'last_name', 'description', 'email', 'sex', 'languages']).dump(veterinarian)
@@ -82,8 +88,10 @@ def get_one_veterinarian(veterinarian_id):
 
 # read current veterinarian's profile
 @veterinarians_bp.route('/my_profile/')
+@auto.doc()
 @jwt_required()
 def my_profile():
+    '''Return the profile of the current veterinarian including is_admin'''
     if get_jwt()['role'] == 'veterinarian':
         return VeterinarianSchema(exclude=['appointments']).dump(current_user)
     else:
@@ -92,8 +100,10 @@ def my_profile():
 
 # read one veterinarian and return all information, except password
 @veterinarians_bp.route('/<int:veterinarian_id>/')
+@auto.doc()
 @jwt_required()
 def get_one_veterinarian_full_details(veterinarian_id):
+    '''Return the full details of one veterinarian with the given id'''
     # get one record from the veterinarians table in the database with the given veterinarian id
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     if gb.is_admin() or is_authorized_veterinarian(veterinarian_id):
@@ -104,8 +114,10 @@ def get_one_veterinarian_full_details(veterinarian_id):
 
 # delete one veterinarian
 @veterinarians_bp.route('/<int:veterinarian_id>/', methods=['DELETE'])
+@auto.doc()
 @jwt_required()
 def delete_veterinarian(veterinarian_id):
+    '''Admin interface - Delete one veterinarian with the given id'''
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     if gb.is_admin():
         # delete one record from the veterinarians table in the database with the given veterinarian id
@@ -118,8 +130,10 @@ def delete_veterinarian(veterinarian_id):
 
 # update one veterinarian
 @veterinarians_bp.route('/<int:veterinarian_id>/', methods=['PUT', 'PATCH'])
+@auto.doc()
 @jwt_required()
 def update_veterinarian(veterinarian_id):
+    '''Update one veterinarian with the given id and return the updated profile of the veterinarian excluding appointments'''
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     if gb.is_admin() or is_authorized_veterinarian(veterinarian_id):
         # update one record in the veterinarians table in the database with the given veterinarian id using the information contained in the request
@@ -136,7 +150,9 @@ def update_veterinarian(veterinarian_id):
 
 # create a new veterinarian
 @veterinarians_bp.route('/register/', methods=['POST'])
+@auto.doc()
 def veterinarian_register():
+    '''Create a new veterinarian and return the full details of the veterinarian created'''
     password_input = request.json['password']
     gb.validate_password(password_input)
     is_admin_input = request.json.get('is_admin')
@@ -160,7 +176,9 @@ def veterinarian_register():
 
 # veterinarian authentication
 @veterinarians_bp.route('/login/', methods=['POST'])
+@auto.doc()
 def veterinarian_login():
+    '''Veterinarian login and return the email of and token for the veterinarian'''
     email=request.json['email']
     password = request.json['password']
     # get one record from the veterinarians table in the database with the given email
@@ -176,11 +194,18 @@ def veterinarian_login():
 
 
 # JWT revoking
-@veterinarians_bp.route("/logout", methods=["DELETE"])
+@veterinarians_bp.route("/logout/", methods=["DELETE"])
+@auto.doc()
 @jwt_required()
 def revoke_token():
+    '''Veterinarian logout'''
     jti = get_jwt()["jti"]
     now = datetime.now()
     db.session.add(TokenBlocklist(jti=jti, created_at=now))
     db.session.commit()
     return {'msg': 'You logged out successfully'}
+
+
+@veterinarians_bp.route('/documentation')
+def documentation():
+    return auto.html()

@@ -1,6 +1,6 @@
 from flask import Flask
 import os
-from init import db, ma, bcrypt, jwt
+from init import db, ma, bcrypt, jwt, auto
 from controllers.cli_controller import db_commands
 from controllers.customers_controller import customers_bp
 from controllers.veterinarians_controller import veterinarians_bp
@@ -8,6 +8,7 @@ from controllers.patients_controller import patients_bp
 from controllers.appointments_controller import appointments_bp
 from sqlalchemy.exc import NoResultFound, DataError
 from sqlalchemy.exc import IntegrityError
+from flask_autodoc.autodoc import Autodoc
 
 
 def create_app():
@@ -85,6 +86,7 @@ def create_app():
     ma.init_app(app)
     bcrypt.init_app(app)
     jwt.init_app(app)
+    auto.init_app(app)
 
     app.register_blueprint(db_commands)
     app.register_blueprint(customers_bp)    
