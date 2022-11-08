@@ -95,7 +95,7 @@ def get_one_customer(customer_id):
 @auto.doc()
 @jwt_required()
 def delete_customer(customer_id):
-    '''Delete one customer with the given id'''
+    '''Admin interface - Delete one customer with the given id'''
     customer = gb.required_record(Customer, customer_id)
     if gb.is_admin():
         # delete one record from the customers table in the database with the given customer id

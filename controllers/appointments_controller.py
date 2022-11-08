@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 import gb
-from init import db, jwt
+from init import db, jwt, auto
 from models.appointment import AppointmentSchema, Appointment
 from models.patient import Patient
 from models.customer import Customer
@@ -47,8 +47,10 @@ def user_lookup_callback(_jwt_header, jwt_data):
 
 # read all appointments
 @appointments_bp.route('/')
+@auto.doc()
 @jwt_required()
 def get_all_appointments():
+    '''Admin interface - Return all appointments'''
     if gb.is_admin():
         # get all records from the appointments table
         appointments = gb.filter_all_records(Appointment)
@@ -59,8 +61,10 @@ def get_all_appointments():
 
 # read all appointments of the current user
 @appointments_bp.route('/my_appointments/')
+@auto.doc()
 @jwt_required()
 def get_my_appointments():
+    '''Return all appointments of the current user'''
     if get_jwt()['role'] == 'veterinarian':
         return AppointmentSchema(many=True, exclude=['veterinarian', 'veterinarian_id']).dump(current_user.appointments)
     else:
@@ -73,8 +77,10 @@ def get_my_appointments():
 
 # read future appointments of the current user
 @appointments_bp.route('/my_appointments/future/')
+@auto.doc()
 @jwt_required()
 def get_future_appointments():
+    '''Return all future appointments of the current user'''
     if get_jwt()['role'] == 'veterinarian':
         # get all records from the appointments table which date is later than today's date and with the current veterinarian
         future_appointments = [appointment for appointment in current_user.appointments if appointment.date > datetime.today().date()]
@@ -95,8 +101,10 @@ def get_future_appointments():
 
 # read previous appointments of the current user
 @appointments_bp.route('/my_appointments/previous/')
+@auto.doc()
 @jwt_required()
 def get_previous_appointments():
+    '''Return all previous appointments of the current user'''
     if get_jwt()['role'] == 'veterinarian':
         # get all records from the appointments table which date is earlier than today's date and with the current veterinarian
         previous_appointments = [appointment for appointment in current_user.appointments if appointment.date < datetime.today().date()]
@@ -118,8 +126,10 @@ def get_previous_appointments():
 
 # read today's appointments of the current user
 @appointments_bp.route('/my_appointments/today/')
+@auto.doc()
 @jwt_required()
 def get_today_appointments():
+    '''Return all today appointments of the current user'''
     if get_jwt()['role'] == 'veterinarian':
         # get all records from the appointments table which date is today's date and with the current veterinarian
         today_appointments = [appointment for appointment in current_user.appointments if appointment.date == datetime.today().date()]
@@ -140,8 +150,10 @@ def get_today_appointments():
 
 # read one appointment
 @appointments_bp.route('/<int:appointment_id>/')
+@auto.doc()
 @jwt_required()
 def get_one_appointment(appointment_id):
+    '''Return one appointment with the given id'''
     appointment = gb.required_record(Appointment, appointment_id)
     if gb.is_admin() or is_appointment_authorized_person(appointment_id):
         # get one record from the appointments table with the given appointment_id
@@ -152,8 +164,10 @@ def get_one_appointment(appointment_id):
 
 # delete one appointment
 @appointments_bp.route('/<int:appointment_id>/', methods=['DELETE'])
+@auto.doc()
 @jwt_required()
 def delete_appointment(appointment_id):
+    '''Admin interface - Delete one appointment with the given id'''
     appointment = gb.required_record(Appointment, appointment_id)
     if gb.is_admin():
         # delete one record from the appointments table with the given appointment_id
@@ -166,8 +180,10 @@ def delete_appointment(appointment_id):
 
 # update one appointment
 @appointments_bp.route('/<int:appointment_id>/', methods=['PUT', 'PATCH'])
+@auto.doc()
 @jwt_required()
 def update_appointment(appointment_id):
+    '''Update one appointment with the given id and return the updated appointment'''
     appointment = gb.required_record(Appointment, appointment_id)
     if gb.is_admin() or is_appointment_authorized_person(appointment_id):
         # update one record in the appointments table with the given appointment_id using the information contained in the request
@@ -181,8 +197,10 @@ def update_appointment(appointment_id):
 
 # create a new appointment
 @appointments_bp.route('/book/', methods=['POST'])
+@auto.doc()
 @jwt_required()
 def appointment_register():
+    '''Booked an appointment and reutrn the appointment created'''
     date_input = request.json['date']
     date_datetime = datetime.strptime(date_input, '%Y-%m-%d').date()
     today = datetime.today().date()

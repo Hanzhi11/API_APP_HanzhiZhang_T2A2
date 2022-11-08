@@ -4,7 +4,7 @@ from models.patient import PatientSchema, Patient
 from models.customer import Customer
 from models.veterinarian import Veterinarian
 from models.appointment import Appointment
-from init import db, jwt
+from init import db, jwt, auto
 from flask_jwt_extended import jwt_required, current_user, get_jwt
 
 
@@ -40,8 +40,10 @@ def user_lookup_callback(_jwt_header, jwt_data):
 
 # read all patients
 @patients_bp.route('/')
+@auto.doc()
 @jwt_required()
 def get_all_patients():
+    '''Admin interface - Return the full details of all the patients'''
     if gb.is_admin():
         # get all records from the patients table in the database
         stmt = db.select(Patient)
@@ -53,8 +55,10 @@ def get_all_patients():
 
 # read one patient
 @patients_bp.route('/<int:patient_id>/')
+@auto.doc()
 @jwt_required()
 def get_one_patient(patient_id):
+    '''Return one patient with the given id'''
     patient = gb.required_record(Patient, patient_id)
     if gb.is_admin() or is_patient_authorized_person(patient_id):
         # get one record from the patients table in the database with the given patient id
@@ -65,8 +69,10 @@ def get_one_patient(patient_id):
 
 # read current user's patients
 @patients_bp.route('/my_patients/')
+@auto.doc()
 @jwt_required()
 def my_patients():
+    '''Return all the patients for the current user'''
     if get_jwt()['role'] == 'veterinarian':
         veterinarian_id = current_user.id
         stmt = db.select(Patient). join(Appointment, Patient.id==Appointment.patient_id).filter_by(veterinarian_id=veterinarian_id)
@@ -78,8 +84,10 @@ def my_patients():
 
 # delete one patient
 @patients_bp.route('/<int:patient_id>/', methods=['DELETE'])
+@auto.doc()
 @jwt_required()
 def delete_patient(patient_id):
+    '''Admin Interface - Delete one patient with the given id'''
     patient = gb.required_record(Patient, patient_id)
     if gb.is_admin():
         # delete one record from the patients table in the database with the given patient id
@@ -92,8 +100,10 @@ def delete_patient(patient_id):
 
 # update one patient
 @patients_bp.route('/<int:patient_id>/', methods=['PUT', 'PATCH'])
+@auto.doc()
 @jwt_required()
 def update_patient(patient_id):
+    '''Update one patient with the given id and return the updated patient'''
     patient = gb.required_record(Patient, patient_id)
     if gb.is_admin() or is_patient_authorized_person(patient_id):
         # update one record in the patients table in the database with the given patient id using the information contained in the request
@@ -107,8 +117,10 @@ def update_patient(patient_id):
 
 # create a new patient
 @patients_bp.route('/register/', methods=['POST'])
+@auto.doc()
 @jwt_required()
 def patient_register():
+    '''Patient registration and return the created patient'''
     # add a new record to the patients table in the database
     patient = Patient(
         name = request.json['name'],
