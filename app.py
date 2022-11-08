@@ -59,9 +59,9 @@ def create_app():
     @app.errorhandler(DataError)
     def data_error(err):
         if 'DatetimeFieldOverflow' in err.args[0]:
-            return {'error': 'Invalid time'}, 403
+            return {'error': 'Invalid date or time'}, 403
         elif 'InvalidDatetimeFormat' in err.args[0]:
-            return {'error': 'Invalid date'}, 403
+            return {'error': 'Invalid date or time'}, 403
         elif 'NumericValueOutOfRange' in err.args[0]:
             return {'error': 'Unreasonable weight'}, 403
         elif 'InvalidTextRepresentation' in err.args[0]:

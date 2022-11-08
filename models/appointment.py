@@ -28,7 +28,7 @@ class Appointment(db.Model):
 
     @validates('time')
     def validate_time(self, key, value):
-        if value[3:5] not in ['00', '15', '30', '45']:
+        if value[-2:] not in ['00', '15', '30', '45']:
             raise ValueError('Invalid time. Minutes must be 00, 15, 30 or 45.')
         return value
 

@@ -56,7 +56,7 @@ def user_lookup_callback(_jwt_header, jwt_data):
 @veterinarians_bp.route('/public/')
 @auto.doc()
 def get_all_veterinarians():
-    '''Return the public information of all veterinarians'''
+    '''Return the public information of all veterinarians.'''
     # get all records from the veterinarians table in the database
     veterinarians = gb.filter_all_records(Veterinarian)
     return VeterinarianSchema(many=True, only=['id', 'first_name', 'last_name', 'description', 'email', 'sex', 'languages']).dump(veterinarians)
@@ -67,7 +67,7 @@ def get_all_veterinarians():
 @auto.doc()
 @jwt_required()
 def get_all_veterinarians_full_details():
-    '''Admin interface - Return the full details of all veterinarians including is_admin and appointments'''
+    '''Admin interface - Return the full details of all veterinarians including is_admin and appointments.'''
     if gb.is_admin():
         # get all records from the veterinarians table in the database
         veterinarians = gb.filter_all_records(Veterinarian)
@@ -80,7 +80,7 @@ def get_all_veterinarians_full_details():
 @veterinarians_bp.route('/<int:veterinarian_id>/public')
 @auto.doc()
 def get_one_veterinarian(veterinarian_id):
-    '''Return the public information of one veterinarian with the given id'''
+    '''Return the public information of one veterinarian with the given id in the format of integer as argument.'''
     # get one record from the veterinarians table in the database with the given veterinarian id
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     return VeterinarianSchema(only=['first_name', 'last_name', 'description', 'email', 'sex', 'languages']).dump(veterinarian)
@@ -91,7 +91,7 @@ def get_one_veterinarian(veterinarian_id):
 @auto.doc()
 @jwt_required()
 def my_profile():
-    '''Return the profile of the current veterinarian including is_admin'''
+    '''Return the profile of the current veterinarian including is_admin.'''
     if get_jwt()['role'] == 'veterinarian':
         return VeterinarianSchema(exclude=['appointments']).dump(current_user)
     else:
@@ -103,7 +103,7 @@ def my_profile():
 @auto.doc()
 @jwt_required()
 def get_one_veterinarian_full_details(veterinarian_id):
-    '''Return the full details of one veterinarian with the given id'''
+    '''Return the full details of one veterinarian with the given id in the format of integer as argument.'''
     # get one record from the veterinarians table in the database with the given veterinarian id
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     if gb.is_admin() or is_authorized_veterinarian(veterinarian_id):
@@ -117,7 +117,7 @@ def get_one_veterinarian_full_details(veterinarian_id):
 @auto.doc()
 @jwt_required()
 def delete_veterinarian(veterinarian_id):
-    '''Admin interface - Delete one veterinarian with the given id'''
+    '''Admin interface - Delete one veterinarian with the given id in the format of integer as argument.'''
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     if gb.is_admin():
         # delete one record from the veterinarians table in the database with the given veterinarian id
@@ -133,7 +133,7 @@ def delete_veterinarian(veterinarian_id):
 @auto.doc()
 @jwt_required()
 def update_veterinarian(veterinarian_id):
-    '''Update one veterinarian with the given id and return the updated profile of the veterinarian excluding appointments'''
+    '''Update one veterinarian with the given id in the format of integer as argument and the key-value pairs as request body, and return the updated profile of the veterinarian excluding appointments. The keys are first_name, last_name, email, password, sex, is_admin, description and languages, and are all optional. The format of the values are: non-empty string for first_name and last_name with the maximum length of 25 characters, string for email with the maximum length of 50 characters, string for password with the mininum length of 8 characters and containing at lease one letter, one number and one special character, text for description, Female or Male for sex, true or false for is_admin, and array with Mandarin, Cantonese, Korean, Japanese, Spanish, and/or French for languages.'''
     veterinarian = gb.required_record(Veterinarian, veterinarian_id)
     if gb.is_admin() or is_authorized_veterinarian(veterinarian_id):
         # update one record in the veterinarians table in the database with the given veterinarian id using the information contained in the request
@@ -152,7 +152,7 @@ def update_veterinarian(veterinarian_id):
 @veterinarians_bp.route('/register/', methods=['POST'])
 @auto.doc()
 def veterinarian_register():
-    '''Create a new veterinarian and return the full details of the veterinarian created'''
+    '''Create a new veterinarian with the key-value pairs as request body, and return the full details of the veterinarian created. The keys are first_name, last_name, email, password, sex, is_admin, description and languages, and are all required, except description and languages. The format of the values are: non-empty string for first_name and last_name with the maximum length of 25 characters, string for email with the maximum length of 50 characters, string for password with the mininum length of 8 characters and containing at lease one letter, one number and one special character, text for description, Female or Male for sex, true or false for is_admin, and array with Mandarin, Cantonese, Korean, Japanese, Spanish, and/or French for languages. The default value is false for is_admin.'''
     password_input = request.json['password']
     gb.validate_password(password_input)
     is_admin_input = request.json.get('is_admin')
@@ -178,7 +178,7 @@ def veterinarian_register():
 @veterinarians_bp.route('/login/', methods=['POST'])
 @auto.doc()
 def veterinarian_login():
-    '''Veterinarian login and return the email of and token for the veterinarian'''
+    '''Veterinarian login with the key-value pairs for email and password as request body and return the email of and token for the veterinarian.'''
     email=request.json['email']
     password = request.json['password']
     # get one record from the veterinarians table in the database with the given email
@@ -198,7 +198,7 @@ def veterinarian_login():
 @auto.doc()
 @jwt_required()
 def revoke_token():
-    '''Veterinarian logout'''
+    '''Veterinarian logout.'''
     jti = get_jwt()["jti"]
     now = datetime.now()
     db.session.add(TokenBlocklist(jti=jti, created_at=now))

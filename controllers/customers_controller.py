@@ -55,7 +55,7 @@ def user_lookup_callback(_jwt_header, jwt_data):
 @auto.doc()
 @jwt_required()
 def get_all_customers():
-    '''Admin interface - Return the full details of all customers'''
+    '''Admin interface - Return the full details of all customers.'''
     if gb.is_admin():
         # get all records from the customers table in the database
         customers = gb.filter_all_records(Customer)
@@ -69,7 +69,7 @@ def get_all_customers():
 @auto.doc()
 @jwt_required()
 def my_profile():
-    '''Return the profile of the current customer excluding patients'''
+    '''Return the profile of the current customer excluding patients.'''
     if get_jwt()['role'] == 'customer':
         return CustomerSchema(only=['id', 'first_name', 'last_name', 'contact_number', 'email']).dump(current_user)
     else:
@@ -81,7 +81,7 @@ def my_profile():
 @auto.doc()
 @jwt_required()
 def get_one_customer(customer_id):
-    '''Return the full details of one customer with the given id'''
+    '''Return the full details of one customer with the given id in the format of integer as argument.'''
     customer = gb.required_record(Customer, customer_id)
     if gb.is_admin() or is_authorized_customer(customer_id) or is_authorized_veterinarians(customer_id):
         # get one record from the customers table in the database with the given customer id
@@ -95,7 +95,7 @@ def get_one_customer(customer_id):
 @auto.doc()
 @jwt_required()
 def delete_customer(customer_id):
-    '''Admin interface - Delete one customer with the given id'''
+    '''Admin interface - Delete one customer with the given id in the format of integer as argument.'''
     customer = gb.required_record(Customer, customer_id)
     if gb.is_admin():
         # delete one record from the customers table in the database with the given customer id
@@ -111,7 +111,7 @@ def delete_customer(customer_id):
 @auto.doc()
 @jwt_required()
 def update_customer(customer_id):
-    '''Update one customer with the given id and return the updated full details of the customer'''
+    '''Update one customer with the given id in the format of integer as argument and the key-value pairs as request body, and return the updated full details of the customer. The keys are first_name, last_name, email, password and contact_number, and are all optional. The format of the values are: non-empty string for first_name and last_name with the maximum length of 25 characters, string for email with the maximum length of 50 characters, string for password with the mininum length of 8 characters and containing at lease one letter, one number and one special character, and string for contact_number with the fixed length of 10 characters.'''
     customer = gb.required_record(Customer, customer_id)
     if gb.is_admin() or is_authorized_customer(customer_id) or is_authorized_veterinarians(customer_id):
         # update one record in the customers table in the database with the given customer id using the information contained in the request
@@ -127,7 +127,7 @@ def update_customer(customer_id):
 @customers_bp.route('/register/', methods=['POST'])
 @auto.doc()
 def customer_register():
-    '''Customer registration and return the full details of the customer registered'''
+    '''Customer registration with key-value pairs, and return the full details of the customer registered. The keys are first_name, last_name, email, password and contact_number, and are all required. The format of the values are: non-empty string for first_name and last_name with the maximum length of 25 characters, string for email with the maximum length of 50 characters, string for password with the mininum length of 8 characters and containing at lease one letter, one number and one special character, and string for contact_number with the fixed length of 10 characters.'''
     password_input = request.json['password']
     gb.validate_password(password_input)
     # add a new record in the customers table in the database
@@ -147,7 +147,7 @@ def customer_register():
 @customers_bp.route('/login/', methods=['POST'])
 @auto.doc()
 def customer_login():
-    '''Customer login and return the email of and the token for the customer'''
+    '''Customer login with the key-value pairs for email and password as request body, and return the email of and the token for the customer.'''
     email=request.json['email']
     password = request.json['password']
     # get one record from the customers table in the database with the given email
@@ -167,7 +167,7 @@ def customer_login():
 @auto.doc()
 @jwt_required()
 def revoke_token():
-    '''Customer logout'''
+    '''Customer logout.'''
     jti = get_jwt()["jti"]
     now = datetime.now()
     db.session.add(TokenBlocklist(jti=jti, created_at=now))

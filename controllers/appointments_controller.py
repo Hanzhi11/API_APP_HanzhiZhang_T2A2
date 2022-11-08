@@ -50,7 +50,7 @@ def user_lookup_callback(_jwt_header, jwt_data):
 @auto.doc()
 @jwt_required()
 def get_all_appointments():
-    '''Admin interface - Return all appointments'''
+    '''Admin interface - Return all appointments.'''
     if gb.is_admin():
         # get all records from the appointments table
         appointments = gb.filter_all_records(Appointment)
@@ -64,7 +64,7 @@ def get_all_appointments():
 @auto.doc()
 @jwt_required()
 def get_my_appointments():
-    '''Return all appointments of the current user'''
+    '''Return all appointments of the current user.'''
     if get_jwt()['role'] == 'veterinarian':
         return AppointmentSchema(many=True, exclude=['veterinarian', 'veterinarian_id']).dump(current_user.appointments)
     else:
@@ -80,7 +80,7 @@ def get_my_appointments():
 @auto.doc()
 @jwt_required()
 def get_future_appointments():
-    '''Return all future appointments of the current user'''
+    '''Return all future appointments of the current user.'''
     if get_jwt()['role'] == 'veterinarian':
         # get all records from the appointments table which date is later than today's date and with the current veterinarian
         future_appointments = [appointment for appointment in current_user.appointments if appointment.date > datetime.today().date()]
@@ -104,7 +104,7 @@ def get_future_appointments():
 @auto.doc()
 @jwt_required()
 def get_previous_appointments():
-    '''Return all previous appointments of the current user'''
+    '''Return all previous appointments of the current user.'''
     if get_jwt()['role'] == 'veterinarian':
         # get all records from the appointments table which date is earlier than today's date and with the current veterinarian
         previous_appointments = [appointment for appointment in current_user.appointments if appointment.date < datetime.today().date()]
@@ -129,7 +129,7 @@ def get_previous_appointments():
 @auto.doc()
 @jwt_required()
 def get_today_appointments():
-    '''Return all today appointments of the current user'''
+    '''Return all today appointments of the current user.'''
     if get_jwt()['role'] == 'veterinarian':
         # get all records from the appointments table which date is today's date and with the current veterinarian
         today_appointments = [appointment for appointment in current_user.appointments if appointment.date == datetime.today().date()]
@@ -153,7 +153,7 @@ def get_today_appointments():
 @auto.doc()
 @jwt_required()
 def get_one_appointment(appointment_id):
-    '''Return one appointment with the given id'''
+    '''Return one appointment with the given id in the format of integer as argument.'''
     appointment = gb.required_record(Appointment, appointment_id)
     if gb.is_admin() or is_appointment_authorized_person(appointment_id):
         # get one record from the appointments table with the given appointment_id
@@ -167,7 +167,7 @@ def get_one_appointment(appointment_id):
 @auto.doc()
 @jwt_required()
 def delete_appointment(appointment_id):
-    '''Admin interface - Delete one appointment with the given id'''
+    '''Admin interface - Delete one appointment with the given id in the format of integer as argument.'''
     appointment = gb.required_record(Appointment, appointment_id)
     if gb.is_admin():
         # delete one record from the appointments table with the given appointment_id
@@ -183,7 +183,7 @@ def delete_appointment(appointment_id):
 @auto.doc()
 @jwt_required()
 def update_appointment(appointment_id):
-    '''Update one appointment with the given id and return the updated appointment'''
+    '''Update one appointment with the given id in the format of integer as argument and the key-value pairs as the request body, and then return the updated appointment. The keys are date, time, patient_id and veterinarian_id, and are all optional. The format of the values are: yyyy-mm-dd for date, hh:mm for time and mm should be one of 00, 15, 30 or 45, and integer for patient_id and veterinarian_id.'''
     appointment = gb.required_record(Appointment, appointment_id)
     if gb.is_admin() or is_appointment_authorized_person(appointment_id):
         # update one record in the appointments table with the given appointment_id using the information contained in the request
@@ -200,7 +200,7 @@ def update_appointment(appointment_id):
 @auto.doc()
 @jwt_required()
 def appointment_register():
-    '''Booked an appointment and reutrn the appointment created'''
+    '''Book an appointment with the key-value pairs as the request body, and reutrn the appointment created. The keys are date, time, patient_id and veterinarian_id, and are all required. The format of the values are: yyyy-mm-dd for date, hh:mm for time and mm should be one of 00, 15, 30 or 45, and integer for patient_id and veterinarian_id.'''
     date_input = request.json['date']
     date_datetime = datetime.strptime(date_input, '%Y-%m-%d').date()
     today = datetime.today().date()
@@ -217,7 +217,7 @@ def appointment_register():
         customer_id = current_user.id
         # get patients' id from the patients table using the current customer's id
         stmt = db.select(Patient.id).filter_by(customer_id=customer_id)
-        result = db.session.scalars(stmt)
+        result = db.session.scalars(stmt).all()
         if patient_id_input not in result:
             return {'error': 'You are not authorized to book an appointment for this patient.'}, 401
     elif get_jwt()['role'] == 'veterinarian' and not current_user.is_admin:

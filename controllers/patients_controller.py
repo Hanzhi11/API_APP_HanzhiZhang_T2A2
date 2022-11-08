@@ -43,7 +43,7 @@ def user_lookup_callback(_jwt_header, jwt_data):
 @auto.doc()
 @jwt_required()
 def get_all_patients():
-    '''Admin interface - Return the full details of all the patients'''
+    '''Admin interface - Return the full details of all the patients.'''
     if gb.is_admin():
         # get all records from the patients table in the database
         stmt = db.select(Patient)
@@ -58,7 +58,7 @@ def get_all_patients():
 @auto.doc()
 @jwt_required()
 def get_one_patient(patient_id):
-    '''Return one patient with the given id'''
+    '''Return one patient with the given id in the format of integer as argument.'''
     patient = gb.required_record(Patient, patient_id)
     if gb.is_admin() or is_patient_authorized_person(patient_id):
         # get one record from the patients table in the database with the given patient id
@@ -72,7 +72,7 @@ def get_one_patient(patient_id):
 @auto.doc()
 @jwt_required()
 def my_patients():
-    '''Return all the patients for the current user'''
+    '''Return all the patients for the current user.'''
     if get_jwt()['role'] == 'veterinarian':
         veterinarian_id = current_user.id
         stmt = db.select(Patient). join(Appointment, Patient.id==Appointment.patient_id).filter_by(veterinarian_id=veterinarian_id)
@@ -87,7 +87,7 @@ def my_patients():
 @auto.doc()
 @jwt_required()
 def delete_patient(patient_id):
-    '''Admin Interface - Delete one patient with the given id'''
+    '''Admin Interface - Delete one patient with the given id in the format of integer as argument.'''
     patient = gb.required_record(Patient, patient_id)
     if gb.is_admin():
         # delete one record from the patients table in the database with the given patient id
@@ -103,7 +103,7 @@ def delete_patient(patient_id):
 @auto.doc()
 @jwt_required()
 def update_patient(patient_id):
-    '''Update one patient with the given id and return the updated patient'''
+    '''Update one patient with the given id in the format of integer as argument and the key-value pairs as request body, and return the updated patient. The keys are name, sex, age, weight, species and customer_id, and are all optional. The format of values are: non-empty string for name with the maximum length of 25 characters, positive integer for age, numeric between 0.01 and 99.99 for weight, Female or Male for sex, dog, cat, bird, fish or rabbit for species, and integer for customer_id.'''
     patient = gb.required_record(Patient, patient_id)
     if gb.is_admin() or is_patient_authorized_person(patient_id):
         # update one record in the patients table in the database with the given patient id using the information contained in the request
@@ -120,7 +120,7 @@ def update_patient(patient_id):
 @auto.doc()
 @jwt_required()
 def patient_register():
-    '''Patient registration and return the created patient'''
+    '''Patient registration in the format of integer as argument and the key-value pairs as request body, and return the created patient. The keys are name, sex, age, weight, species and customer_id, and are all required. The format of values are: non-empty string for name with the maximum length of 25 characters, positive integer for age, numeric between 0.01 and 99.99 for weight, Female or Male for sex, dog, cat, bird, fish or rabbit for species, and integer for customer_id.'''
     # add a new record to the patients table in the database
     patient = Patient(
         name = request.json['name'],
