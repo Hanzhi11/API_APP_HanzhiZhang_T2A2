@@ -45,11 +45,11 @@ If everything works fine, you can get started with the following:
 - Get access
   
    - Register an account
-     - Customers: Use `GET /customers/register/` endpoint with required attributes of first_name, last_name, email, password and contact_name.
+     - Customers: Use `POST /customers/register/` endpoint with required attributes of first_name, last_name, email, password and contact_name.
   
     ![customer_registration](docs/api-doc/customer-registration.png)
 
-     - Veterinarians: Use `GET /veterinarians/register/` endpoint with required attributes of first_name, last_name, email, password, sex and is_admin and optional attributes of description and languages.
+     - Veterinarians: Use `POST /veterinarians/register/` endpoint with required attributes of first_name, last_name, email, password, sex and is_admin and optional attributes of description and languages.
 
     ![veterinarian_registration](docs/api-doc/vet-registration.png)
 
